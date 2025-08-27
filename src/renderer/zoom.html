@@ -384,8 +384,8 @@
       } else {
         console.log(`🖱️ EXECUTING: Move and click at (${x}, ${y}) - preparing to close zoom window`);
         
-        // First, notify main process that we're about to execute
-        ipcRenderer.send('prepare-execute', {
+        // Send message to hide overlay immediately
+        ipcRenderer.send('hide-overlay-and-execute', {
           x: x,
           y: y,
           cellNumber: currentCellData.number

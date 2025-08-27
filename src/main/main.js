@@ -78,19 +78,14 @@ class ScreenGridApp {
       console.log(`🔍 ZOOM CLOSED: executingClick=${this.executingClick}, isOverlayVisible=${this.isOverlayVisible}`);
       this.zoomWindow = null;
       
-      // Only show overlay again if not executing a click
-      if (this.isOverlayVisible && this.overlayWindow && !this.executingClick) {
-        console.log('📋 ZOOM CLOSED: Showing overlay again');
-        this.overlayWindow.show();
-      } else {
-        console.log('📋 ZOOM CLOSED: NOT showing overlay (executing click or overlay not visible)');
-      }
+      // NEVER show overlay again automatically - user must explicitly toggle with Ctrl+Shift+G
+      console.log('📋 ZOOM CLOSED: Never auto-showing overlay - user must toggle manually');
       
       // Reset the executing flag after a longer delay
       setTimeout(() => {
         console.log('🔄 RESET: executingClick flag reset to false');
         this.executingClick = false;
-      }, 2000);
+      }, 3000);
     });
   }
 
@@ -205,9 +200,12 @@ class ScreenGridApp {
     });
 
     ipcMain.on('show-overlay-again', () => {
-      if (this.isOverlayVisible && this.overlayWindow) {
+      console.log('📋 SHOW OVERLAY: Back to Grid button pressed');
+      if (this.overlayWindow) {
         this.overlayWindow.show();
         this.overlayWindow.focus();
+        this.isOverlayVisible = true;
+        console.log('📋 SHOW OVERLAY: Overlay shown and focused');
       }
     });
 
@@ -236,6 +234,25 @@ class ScreenGridApp {
           }, 500);
         }
       });
+    });
+
+    ipcMain.on('hide-overlay-and-execute', (event, data) => {
+      console.log(`🚀 HIDE AND EXECUTE: Immediately hiding overlay and executing click at (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
+      
+      // Set executing flag immediately to prevent overlay from reappearing
+      this.executingClick = true;
+      
+      // Hide overlay window immediately
+      if (this.overlayWindow) {
+        this.overlayWindow.hide();
+        this.isOverlayVisible = false;
+        console.log('📋 IMMEDIATE: Overlay hidden');
+      }
+      
+      // Execute the click after a brief delay for window closing
+      setTimeout(() => {
+        this.executeActualClick(data);
+      }, 200);
     });
 
     ipcMain.on('prepare-execute', (event, data) => {
