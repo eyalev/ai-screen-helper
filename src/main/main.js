@@ -257,56 +257,6 @@ class ScreenGridApp {
       }, 300);
     });
 
-    executeActualClick(data) {
-      console.log(`🖱️ EXECUTING: Move and click at (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
-      
-      const { exec } = require('child_process');
-      
-      console.log(`📋 EXECUTE: Running xdotool mousemove ${data.x} ${data.y}`);
-      
-      // First move the mouse
-      exec(`xdotool mousemove ${data.x} ${data.y}`, { 
-        env: { ...process.env, DISPLAY: ':0' }
-      }, (moveError, stdout, stderr) => {
-        if (moveError) {
-          console.error(`❌ EXECUTE: Mouse move failed:`, moveError.message);
-          console.error(`   Command: xdotool mousemove ${data.x} ${data.y}`);
-          console.error(`   Stderr: ${stderr}`);
-          return;
-        }
-        
-        console.log(`✅ EXECUTE: Mouse moved to (${data.x}, ${data.y})`);
-        
-        // Then click after a brief delay
-        setTimeout(() => {
-          console.log(`📋 EXECUTE: Running xdotool click 1`);
-          
-          exec(`xdotool click 1`, { 
-            env: { ...process.env, DISPLAY: ':0' }
-          }, (clickError, stdout, stderr) => {
-            if (clickError) {
-              console.error(`❌ EXECUTE: Click failed:`, clickError.message);
-              console.error(`   Command: xdotool click 1`);
-              console.error(`   Stderr: ${stderr}`);
-            } else {
-              console.log(`✅ EXECUTE: Left click completed at (${data.x}, ${data.y})`);
-              
-              // Verify final position
-              setTimeout(() => {
-                exec('xdotool getmouselocation', { 
-                  env: { ...process.env, DISPLAY: ':0' }
-                }, (err, out) => {
-                  if (!err) {
-                    console.log(`📍 EXECUTE: Final mouse position: ${out.trim()}`);
-                  }
-                });
-              }, 200);
-            }
-          });
-        }, 150); // Small delay between move and click
-      });
-    }
-
     ipcMain.on('execute-click', (event, data) => {
       // Legacy handler - not used with new prepare-execute flow
       console.log(`🖱️ LEGACY EXECUTE: Move and click at (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
@@ -419,6 +369,56 @@ class ScreenGridApp {
           }
         }
       });
+    });
+  }
+
+  executeActualClick(data) {
+    console.log(`🖱️ EXECUTING: Move and click at (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
+    
+    const { exec } = require('child_process');
+    
+    console.log(`📋 EXECUTE: Running xdotool mousemove ${data.x} ${data.y}`);
+    
+    // First move the mouse
+    exec(`xdotool mousemove ${data.x} ${data.y}`, { 
+      env: { ...process.env, DISPLAY: ':0' }
+    }, (moveError, stdout, stderr) => {
+      if (moveError) {
+        console.error(`❌ EXECUTE: Mouse move failed:`, moveError.message);
+        console.error(`   Command: xdotool mousemove ${data.x} ${data.y}`);
+        console.error(`   Stderr: ${stderr}`);
+        return;
+      }
+      
+      console.log(`✅ EXECUTE: Mouse moved to (${data.x}, ${data.y})`);
+      
+      // Then click after a brief delay
+      setTimeout(() => {
+        console.log(`📋 EXECUTE: Running xdotool click 1`);
+        
+        exec(`xdotool click 1`, { 
+          env: { ...process.env, DISPLAY: ':0' }
+        }, (clickError, stdout, stderr) => {
+          if (clickError) {
+            console.error(`❌ EXECUTE: Click failed:`, clickError.message);
+            console.error(`   Command: xdotool click 1`);
+            console.error(`   Stderr: ${stderr}`);
+          } else {
+            console.log(`✅ EXECUTE: Left click completed at (${data.x}, ${data.y})`);
+            
+            // Verify final position
+            setTimeout(() => {
+              exec('xdotool getmouselocation', { 
+                env: { ...process.env, DISPLAY: ':0' }
+              }, (err, out) => {
+                if (!err) {
+                  console.log(`📍 EXECUTE: Final mouse position: ${out.trim()}`);
+                }
+              });
+            }, 200);
+          }
+        });
+      }, 150); // Small delay between move and click
     });
   }
 
