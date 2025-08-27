@@ -31,7 +31,7 @@ npm start
 - **Ctrl+Shift+2**: Switch to display 2
 - **Escape**: Hide overlay
 - **Click numbered square**: Open zoom window for that area
-- **Click grid square in zoom**: Execute mouse click at those coordinates
+- **Click grid square in zoom**: Close zoom window and execute mouse click
 - **Hover grid squares**: Visual highlight showing clickable areas
 
 ### Multi-Monitor Support
@@ -70,12 +70,13 @@ Enable the "Debug Mode" checkbox in the zoom window to test coordinate accuracy:
 4. **Fine-tune if needed** - Use this to validate coordinate calculations
 
 **Normal Mode** (default):
-- Click grid square → Move mouse + execute left click
-- Red flash confirms click execution
+- Click grid square → Zoom window closes → Move mouse + execute left click
+- Clean execution without window interference
 - Perfect for AI agents to interact with UI elements
 
 **Debug Mode**:
 - Click grid square → Move mouse only (no click)
+- Zoom window stays open for continued testing
 - Safe for testing coordinate accuracy
 - Console shows detailed movement logging
 

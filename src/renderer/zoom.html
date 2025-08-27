@@ -185,11 +185,11 @@
     </div>
     <div style="display: flex; align-items: center; gap: 15px;">
       <div class="instructions">
-        Click grid squares to execute mouse click at coordinates
+        Click grid squares to close window and execute click
       </div>
       <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer;">
         <input type="checkbox" id="debugMode" style="margin: 0;">
-        <span>Debug Mode (move only)</span>
+        <span>Debug Mode (move only, keep open)</span>
       </label>
     </div>
   </div>
@@ -363,12 +363,9 @@
     }
 
     function executeClick(x, y, squareElement) {
-      // Visual feedback
+      // Visual feedback (brief)
       squareElement.classList.add('clicked');
-      setTimeout(() => {
-        squareElement.classList.remove('clicked');
-      }, 500);
-
+      
       const debugMode = document.getElementById('debugMode').checked;
       
       if (debugMode) {
@@ -379,13 +376,24 @@
           cellNumber: currentCellData.number,
           debugMode: true
         });
+        // Keep zoom window open in debug mode for testing
+        setTimeout(() => {
+          squareElement.classList.remove('clicked');
+        }, 500);
       } else {
-        console.log(`🖱️ EXECUTING: Move and click at (${x}, ${y})`);
-        ipcRenderer.send('execute-click', {
-          x: x,
-          y: y,
-          cellNumber: currentCellData.number
-        });
+        console.log(`🖱️ EXECUTING: Move and click at (${x}, ${y}) - closing zoom window`);
+        
+        // Close zoom window immediately to avoid interference
+        window.close();
+        
+        // Send execute command after a brief delay to ensure window is closed
+        setTimeout(() => {
+          ipcRenderer.send('execute-click', {
+            x: x,
+            y: y,
+            cellNumber: currentCellData.number
+          });
+        }, 100);
       }
     }
 
