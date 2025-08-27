@@ -185,6 +185,28 @@ class ScreenGridApp {
         this.overlayWindow.focus();
       }
     });
+
+    ipcMain.on('debug-move-mouse', (event, data) => {
+      console.log(`🐛 DEBUG: Moving mouse to (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
+      
+      const { exec } = require('child_process');
+      exec(`xdotool mousemove ${data.x} ${data.y}`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`❌ DEBUG: xdotool failed:`, error.message);
+        } else {
+          console.log(`✅ DEBUG: Mouse moved to (${data.x}, ${data.y})`);
+          
+          // Optional: Add a visual indicator by briefly clicking or moving back
+          setTimeout(() => {
+            exec('xdotool getmouselocation', (err, out) => {
+              if (!err) {
+                console.log(`📍 DEBUG: Current mouse position: ${out.trim()}`);
+              }
+            });
+          }, 500);
+        }
+      });
+    });
   }
 
   registerGlobalShortcuts() {
