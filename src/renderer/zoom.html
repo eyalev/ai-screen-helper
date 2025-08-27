@@ -69,6 +69,16 @@
       z-index: 10;
     }
 
+    #gridSquareContainer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 20;
+      pointer-events: none; /* Let grid squares handle their own events */
+    }
+
     .grid-square {
       position: absolute;
       border: 1px solid rgba(255, 255, 0, 0.3);
@@ -318,6 +328,8 @@
       const gridCols = Math.ceil(currentCellData.width / gridSize);
       const gridRows = Math.ceil(currentCellData.height / gridSize);
       
+      console.log(`🔧 GRID: Creating ${gridCols}x${gridRows} interactive squares`);
+      
       for (let row = 0; row < gridRows; row++) {
         for (let col = 0; col < gridCols; col++) {
           // Create clickable grid square
@@ -339,10 +351,17 @@
           const centerY = Math.floor(currentCellData.y + (row + 0.5) * gridSize);
           
           square.title = `Click to move and click at (${centerX}, ${centerY})`;
+          square.setAttribute('data-coords', `${centerX},${centerY}`);
+          square.setAttribute('data-grid', `${col},${row}`);
           
           square.addEventListener('click', (event) => {
+            console.log(`🎯 GRID SQUARE CLICKED: (${col},${row}) -> (${centerX},${centerY})`);
             event.stopPropagation();
             executeClick(centerX, centerY, square);
+          });
+          
+          square.addEventListener('mouseenter', () => {
+            console.log(`🖱️ HOVER: Grid square (${col},${row})`);
           });
           
           gridSquareContainer.appendChild(square);
@@ -361,13 +380,19 @@
           fineGrid.appendChild(text);
         }
       }
+      
+      console.log(`✅ GRID CREATION COMPLETE: ${gridSquareContainer.children.length} interactive squares added`);
+      console.log(`🔧 CONTAINER: gridSquareContainer positioned and styled`);
     }
 
     function executeClick(x, y, squareElement) {
+      console.log(`🚀 EXECUTE CLICK FUNCTION CALLED: (${x}, ${y})`);
+      
       // Visual feedback (brief)
       squareElement.classList.add('clicked');
       
       const debugMode = document.getElementById('debugMode').checked;
+      console.log(`🔧 DEBUG MODE: ${debugMode ? 'ENABLED' : 'DISABLED'}`);
       
       if (debugMode) {
         console.log(`🐛 DEBUG: Only moving mouse to (${x}, ${y}) - no click`);
@@ -385,13 +410,16 @@
         console.log(`🖱️ EXECUTING: Move and click at (${x}, ${y}) - preparing to close zoom window`);
         
         // Send message to hide overlay immediately
+        console.log(`📤 SENDING: hide-overlay-and-execute message`);
         ipcRenderer.send('hide-overlay-and-execute', {
           x: x,
           y: y,
           cellNumber: currentCellData.number
         });
+        console.log(`📤 MESSAGE SENT: hide-overlay-and-execute`);
         
         // Close zoom window immediately to avoid interference
+        console.log(`🔒 CLOSING: Zoom window`);
         window.close();
       }
     }
@@ -427,10 +455,15 @@
       crosshair.style.display = 'none';
     });
 
-    // Canvas click disabled - using grid squares instead
-    // canvas.addEventListener('click', () => {
-    //   // Grid squares handle clicking now
-    // });
+    // Canvas click completely disabled - using grid squares instead
+    // Keep mousemove for crosshair, but disable clicks
+    canvas.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('⚠️ CANVAS CLICK BLOCKED: Use grid squares instead');
+      return false;
+    });
+    console.log('🔧 SETUP: Canvas clicks blocked, grid squares will handle clicks');
 
     function selectCoordinates(executeClick = false) {
       const coordinateData = {
