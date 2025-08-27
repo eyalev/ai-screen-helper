@@ -48,9 +48,6 @@ class ScreenGridApp {
     this.overlayWindow.setIgnoreMouseEvents(false);
     this.overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
     
-    // Open dev tools for debugging
-    this.overlayWindow.webContents.openDevTools();
-    
     // Hide initially
     this.overlayWindow.hide();
 
@@ -76,9 +73,6 @@ class ScreenGridApp {
     });
 
     this.zoomWindow.loadFile(path.join(__dirname, '../renderer/zoom.html'));
-
-    // Open dev tools for debugging
-    this.zoomWindow.webContents.openDevTools();
 
     this.zoomWindow.on('closed', () => {
       console.log(`🔍 ZOOM CLOSED: executingClick=${this.executingClick}, isOverlayVisible=${this.isOverlayVisible}`);
@@ -220,7 +214,7 @@ class ScreenGridApp {
       
       const { exec } = require('child_process');
       exec(`xdotool mousemove ${data.x} ${data.y}`, { 
-        env: { ...process.env, DISPLAY: ':0' }
+        env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
       }, (error, stdout, stderr) => {
         if (error) {
           console.error(`❌ DEBUG: xdotool failed:`, error.message);
@@ -231,7 +225,7 @@ class ScreenGridApp {
           // Optional: Add a visual indicator by briefly clicking or moving back
           setTimeout(() => {
             exec('xdotool getmouselocation', { 
-              env: { ...process.env, DISPLAY: ':0' }
+              env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
             }, (err, out) => {
               if (!err) {
                 console.log(`📍 DEBUG: Current mouse position: ${out.trim()}`);
@@ -301,7 +295,7 @@ class ScreenGridApp {
         
         // First move the mouse
         exec(`xdotool mousemove ${data.x} ${data.y}`, { 
-          env: { ...process.env, DISPLAY: ':0' }
+          env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
         }, (moveError, stdout, stderr) => {
           if (moveError) {
             console.error(`❌ EXECUTE: Mouse move failed:`, moveError.message);
@@ -317,7 +311,7 @@ class ScreenGridApp {
             console.log(`📋 EXECUTE: Running xdotool click 1`);
             
             exec(`xdotool click 1`, { 
-              env: { ...process.env, DISPLAY: ':0' }
+              env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
             }, (clickError, stdout, stderr) => {
               if (clickError) {
                 console.error(`❌ EXECUTE: Click failed:`, clickError.message);
@@ -329,7 +323,7 @@ class ScreenGridApp {
                 // Verify final position
                 setTimeout(() => {
                   exec('xdotool getmouselocation', { 
-                    env: { ...process.env, DISPLAY: ':0' }
+                    env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
                   }, (err, out) => {
                     if (!err) {
                       console.log(`📍 EXECUTE: Final mouse position: ${out.trim()}`);
@@ -350,7 +344,7 @@ class ScreenGridApp {
       
       // Test 1: Get current mouse position
       exec('xdotool getmouselocation', { 
-        env: { ...process.env, DISPLAY: ':0' }
+        env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
       }, (err, out, stderr) => {
         if (err) {
           console.error('❌ TEST: getmouselocation failed:', err.message);
@@ -369,7 +363,7 @@ class ScreenGridApp {
             console.log(`🧪 TEST: Moving mouse to (${testX}, ${testY})`);
             
             exec(`xdotool mousemove ${testX} ${testY}`, { 
-              env: { ...process.env, DISPLAY: ':0' }
+              env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
             }, (moveErr, moveOut, moveStderr) => {
               if (moveErr) {
                 console.error('❌ TEST: mousemove failed:', moveErr.message);
@@ -380,7 +374,7 @@ class ScreenGridApp {
                 // Move back to original position
                 setTimeout(() => {
                   exec(`xdotool mousemove ${currentX} ${currentY}`, { 
-                    env: { ...process.env, DISPLAY: ':0' }
+                    env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
                   }, (backErr) => {
                     if (!backErr) {
                       console.log('✅ TEST: Mouse restored to original position');
@@ -404,7 +398,7 @@ class ScreenGridApp {
     
     // First move the mouse
     exec(`xdotool mousemove ${data.x} ${data.y}`, { 
-      env: { ...process.env, DISPLAY: ':0' }
+      env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
     }, (moveError, stdout, stderr) => {
       if (moveError) {
         console.error(`❌ EXECUTE: Mouse move failed:`, moveError.message);
@@ -420,7 +414,7 @@ class ScreenGridApp {
         console.log(`📋 EXECUTE: Running xdotool click 1`);
         
         exec(`xdotool click 1`, { 
-          env: { ...process.env, DISPLAY: ':0' }
+          env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
         }, (clickError, stdout, stderr) => {
           if (clickError) {
             console.error(`❌ EXECUTE: Click failed:`, clickError.message);
@@ -432,7 +426,7 @@ class ScreenGridApp {
             // Verify final position
             setTimeout(() => {
               exec('xdotool getmouselocation', { 
-                env: { ...process.env, DISPLAY: ':0' }
+                env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' }
               }, (err, out) => {
                 if (!err) {
                   console.log(`📍 EXECUTE: Final mouse position: ${out.trim()}`);
