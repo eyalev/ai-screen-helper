@@ -382,19 +382,17 @@
           squareElement.classList.remove('clicked');
         }, 500);
       } else {
-        console.log(`🖱️ EXECUTING: Move and click at (${x}, ${y}) - closing zoom window`);
+        console.log(`🖱️ EXECUTING: Move and click at (${x}, ${y}) - preparing to close zoom window`);
+        
+        // First, notify main process that we're about to execute
+        ipcRenderer.send('prepare-execute', {
+          x: x,
+          y: y,
+          cellNumber: currentCellData.number
+        });
         
         // Close zoom window immediately to avoid interference
         window.close();
-        
-        // Send execute command after a brief delay to ensure window is closed
-        setTimeout(() => {
-          ipcRenderer.send('execute-click', {
-            x: x,
-            y: y,
-            cellNumber: currentCellData.number
-          });
-        }, 100);
       }
     }
 

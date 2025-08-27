@@ -75,15 +75,22 @@ class ScreenGridApp {
     this.zoomWindow.loadFile(path.join(__dirname, '../renderer/zoom.html'));
 
     this.zoomWindow.on('closed', () => {
+      console.log(`🔍 ZOOM CLOSED: executingClick=${this.executingClick}, isOverlayVisible=${this.isOverlayVisible}`);
       this.zoomWindow = null;
+      
       // Only show overlay again if not executing a click
       if (this.isOverlayVisible && this.overlayWindow && !this.executingClick) {
+        console.log('📋 ZOOM CLOSED: Showing overlay again');
         this.overlayWindow.show();
+      } else {
+        console.log('📋 ZOOM CLOSED: NOT showing overlay (executing click or overlay not visible)');
       }
-      // Reset the executing flag after a delay
+      
+      // Reset the executing flag after a longer delay
       setTimeout(() => {
+        console.log('🔄 RESET: executingClick flag reset to false');
         this.executingClick = false;
-      }, 1000);
+      }, 2000);
     });
   }
 
@@ -231,66 +238,217 @@ class ScreenGridApp {
       });
     });
 
-    ipcMain.on('execute-click', (event, data) => {
-      console.log(`🖱️ EXECUTING: Move and click at (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
+    ipcMain.on('prepare-execute', (event, data) => {
+      console.log(`🚀 PREPARE EXECUTE: Setting up for click at (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
       
-      // Set executing flag to prevent overlay from reappearing
+      // Set executing flag immediately to prevent overlay from reappearing
       this.executingClick = true;
       
       // Hide overlay window as well
       if (this.overlayWindow) {
         this.overlayWindow.hide();
         this.isOverlayVisible = false;
+        console.log('📋 PREPARE: Overlay hidden');
       }
+      
+      // Execute the click after zoom window closes
+      setTimeout(() => {
+        this.executeClickCommand(data);
+      }, 300);
+    });
+
+    ipcMain.on('execute-click', (event, data) => {
+      // This handler is kept for backward compatibility but not used anymore
+      console.log(`🖱️ LEGACY EXECUTE: Move and click at (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
+      this.executeClickCommand(data);
+    });
+  }
+
+  executeClickCommand(data) {
+    console.log(`🖱️ EXECUTING: Move and click at (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
+    
+    const { exec } = require('child_process');
+    
+    console.log(`📋 EXECUTE: Running xdotool mousemove ${data.x} ${data.y}`);
+    
+    // First move the mouse
+    exec(`xdotool mousemove ${data.x} ${data.y}`, { 
+      env: { ...process.env, DISPLAY: ':0' }
+    }, (moveError, stdout, stderr) => {
+      if (moveError) {
+        console.error(`❌ EXECUTE: Mouse move failed:`, moveError.message);
+        console.error(`   Command: xdotool mousemove ${data.x} ${data.y}`);
+        console.error(`   Stderr: ${stderr}`);
+        return;
+      }
+      
+      console.log(`✅ EXECUTE: Mouse moved to (${data.x}, ${data.y})`);
+      
+      // Then click after a brief delay
+      setTimeout(() => {
+        console.log(`📋 EXECUTE: Running xdotool click 1`);
+        
+        exec(`xdotool click 1`, { 
+          env: { ...process.env, DISPLAY: ':0' }
+        }, (clickError, stdout, stderr) => {
+          if (clickError) {
+            console.error(`❌ EXECUTE: Click failed:`, clickError.message);
+            console.error(`   Command: xdotool click 1`);
+            console.error(`   Stderr: ${stderr}`);
+          } else {
+            console.log(`✅ EXECUTE: Left click completed at (${data.x}, ${data.y})`);
+            
+            // Verify final position
+            setTimeout(() => {
+              exec('xdotool getmouselocation', { 
+                env: { ...process.env, DISPLAY: ':0' }
+              }, (err, out) => {
+                if (!err) {
+                  console.log(`📍 EXECUTE: Final mouse position: ${out.trim()}`);
+                }
+              });
+            }, 200);
+          }
+        });
+      }, 150); // Small delay between move and click
+    });
+  }
+
+  setupIpcHandlers() {
+    ipcMain.on('grid-cell-clicked', async (event, cellData) => {
+      console.log('Grid cell clicked:', cellData);
+      
+      // Hide the overlay when opening zoom window
+      if (this.overlayWindow) {
+        this.overlayWindow.hide();
+      }
+      
+      if (!this.zoomWindow) {
+        await this.createZoomWindow();
+      }
+
+      // Send zoom data to zoom window
+      this.zoomWindow.webContents.send('show-zoom', {
+        cellData,
+        screenshot: this.currentScreenshot,
+        config: this.gridConfig,
+        screenSize: this.currentDisplay ? this.currentDisplay.bounds : screen.getPrimaryDisplay().bounds
+      });
+
+      this.zoomWindow.show();
+      this.zoomWindow.focus();
+    });
+
+    ipcMain.on('coordinate-selected', (event, data) => {
+      console.log('Final coordinates selected:', data);
+      // Output coordinates in format suitable for xdotool
+      console.log(`xdotool mousemove ${data.x} ${data.y}`);
+      console.log(`xdotool click 1`);
+      
+      // Optionally execute xdotool command
+      if (data.executeClick) {
+        const { exec } = require('child_process');
+        exec(`xdotool mousemove ${data.x} ${data.y}`, (error) => {
+          if (!error && data.executeClick) {
+            exec(`xdotool click 1`);
+          }
+        });
+      }
+    });
+
+    ipcMain.on('hide-overlay', () => {
+      if (this.overlayWindow) {
+        this.overlayWindow.hide();
+        this.isOverlayVisible = false;
+      }
+      if (this.zoomWindow) {
+        this.zoomWindow.hide();
+      }
+    });
+
+    ipcMain.on('show-overlay-again', () => {
+      if (this.isOverlayVisible && this.overlayWindow && !this.executingClick) {
+        this.overlayWindow.show();
+        this.overlayWindow.focus();
+      }
+    });
+
+    ipcMain.on('debug-move-mouse', (event, data) => {
+      console.log(`🐛 DEBUG: Moving mouse to (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
+      
+      const { exec } = require('child_process');
+      exec(`xdotool mousemove ${data.x} ${data.y}`, { 
+        env: { ...process.env, DISPLAY: ':0' }
+      }, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`❌ DEBUG: xdotool failed:`, error.message);
+          console.error(`   Stderr: ${stderr}`);
+        } else {
+          console.log(`✅ DEBUG: Mouse moved to (${data.x}, ${data.y})`);
+          
+          // Optional: Add a visual indicator by briefly clicking or moving back
+          setTimeout(() => {
+            exec('xdotool getmouselocation', { 
+              env: { ...process.env, DISPLAY: ':0' }
+            }, (err, out) => {
+              if (!err) {
+                console.log(`📍 DEBUG: Current mouse position: ${out.trim()}`);
+              }
+            });
+          }, 500);
+        }
+      });
+    });
+
+    ipcMain.on('test-xdotool', () => {
+      console.log('🧪 TESTING: xdotool functionality');
       
       const { exec } = require('child_process');
       
-      // Add a longer delay to ensure zoom window is completely closed
-      setTimeout(() => {
-        console.log(`📋 EXECUTE: Running xdotool mousemove ${data.x} ${data.y}`);
-        
-        // First move the mouse
-        exec(`xdotool mousemove ${data.x} ${data.y}`, { 
-          env: { ...process.env, DISPLAY: ':0' }
-        }, (moveError, stdout, stderr) => {
-          if (moveError) {
-            console.error(`❌ EXECUTE: Mouse move failed:`, moveError.message);
-            console.error(`   Command: xdotool mousemove ${data.x} ${data.y}`);
-            console.error(`   Stderr: ${stderr}`);
-            return;
-          }
+      // Test 1: Get current mouse position
+      exec('xdotool getmouselocation', { 
+        env: { ...process.env, DISPLAY: ':0' }
+      }, (err, out, stderr) => {
+        if (err) {
+          console.error('❌ TEST: getmouselocation failed:', err.message);
+          console.error('   Stderr:', stderr);
+        } else {
+          console.log('✅ TEST: Current mouse position:', out.trim());
           
-          console.log(`✅ EXECUTE: Mouse moved to (${data.x}, ${data.y})`);
-          
-          // Then click after a brief delay
-          setTimeout(() => {
-            console.log(`📋 EXECUTE: Running xdotool click 1`);
+          // Test 2: Try to move mouse slightly (save current position first)
+          const match = out.match(/x:(\d+) y:(\d+)/);
+          if (match) {
+            const currentX = parseInt(match[1]);
+            const currentY = parseInt(match[2]);
+            const testX = currentX + 10;
+            const testY = currentY + 10;
             
-            exec(`xdotool click 1`, { 
+            console.log(`🧪 TEST: Moving mouse to (${testX}, ${testY})`);
+            
+            exec(`xdotool mousemove ${testX} ${testY}`, { 
               env: { ...process.env, DISPLAY: ':0' }
-            }, (clickError, stdout, stderr) => {
-              if (clickError) {
-                console.error(`❌ EXECUTE: Click failed:`, clickError.message);
-                console.error(`   Command: xdotool click 1`);
-                console.error(`   Stderr: ${stderr}`);
+            }, (moveErr, moveOut, moveStderr) => {
+              if (moveErr) {
+                console.error('❌ TEST: mousemove failed:', moveErr.message);
+                console.error('   Stderr:', moveStderr);
               } else {
-                console.log(`✅ EXECUTE: Left click completed at (${data.x}, ${data.y})`);
+                console.log('✅ TEST: Mouse move completed');
                 
-                // Verify final position
+                // Move back to original position
                 setTimeout(() => {
-                  exec('xdotool getmouselocation', { 
+                  exec(`xdotool mousemove ${currentX} ${currentY}`, { 
                     env: { ...process.env, DISPLAY: ':0' }
-                  }, (err, out) => {
-                    if (!err) {
-                      console.log(`📍 EXECUTE: Final mouse position: ${out.trim()}`);
+                  }, (backErr) => {
+                    if (!backErr) {
+                      console.log('✅ TEST: Mouse restored to original position');
                     }
                   });
-                }, 200);
+                }, 500);
               }
             });
-          }, 150); // Small delay between move and click
-        });
-      }, 300); // Wait for zoom window to close completely
+          }
+        }
+      });
     });
 
     ipcMain.on('test-xdotool', () => {
