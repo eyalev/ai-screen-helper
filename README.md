@@ -14,7 +14,23 @@ A screen grid overlay tool designed to help AI agents perform precise mouse targ
 
 ### Installation
 
+#### AppImage (Recommended)
+
+1. Download the latest `.AppImage` file from [Releases](https://github.com/eyalev/ai-screen-helper/releases)
+2. Make it executable: `chmod +x AI-Screen-Helper-*.AppImage`
+3. Run it: `./AI-Screen-Helper-*.AppImage`
+
+#### Debian Package
+
+1. Download the latest `.deb` file from [Releases](https://github.com/eyalev/ai-screen-helper/releases)
+2. Install: `sudo dpkg -i ai-screen-helper_*.deb`
+3. Run: `ai-screen-helper`
+
+#### From Source
+
 ```bash
+git clone https://github.com/eyalev/ai-screen-helper.git
+cd ai-screen-helper
 npm install
 ```
 
