@@ -220,6 +220,42 @@ class ScreenGridApp {
         }
       });
     });
+
+    ipcMain.on('execute-click', (event, data) => {
+      console.log(`🖱️ EXECUTING: Move and click at (${data.x}, ${data.y}) for cell ${data.cellNumber}`);
+      
+      const { exec } = require('child_process');
+      
+      // First move the mouse
+      exec(`xdotool mousemove ${data.x} ${data.y}`, (moveError) => {
+        if (moveError) {
+          console.error(`❌ EXECUTE: Mouse move failed:`, moveError.message);
+          return;
+        }
+        
+        console.log(`✅ EXECUTE: Mouse moved to (${data.x}, ${data.y})`);
+        
+        // Then click after a brief delay
+        setTimeout(() => {
+          exec(`xdotool click 1`, (clickError) => {
+            if (clickError) {
+              console.error(`❌ EXECUTE: Click failed:`, clickError.message);
+            } else {
+              console.log(`✅ EXECUTE: Left click completed at (${data.x}, ${data.y})`);
+              
+              // Verify final position
+              setTimeout(() => {
+                exec('xdotool getmouselocation', (err, out) => {
+                  if (!err) {
+                    console.log(`📍 EXECUTE: Final mouse position: ${out.trim()}`);
+                  }
+                });
+              }, 200);
+            }
+          });
+        }, 100); // Small delay between move and click
+      });
+    });
   }
 
   registerGlobalShortcuts() {

@@ -31,7 +31,8 @@ npm start
 - **Ctrl+Shift+2**: Switch to display 2
 - **Escape**: Hide overlay
 - **Click numbered square**: Open zoom window for that area
-- **Click in zoom window**: Select precise coordinates
+- **Click grid square in zoom**: Execute mouse click at those coordinates
+- **Hover grid squares**: Visual highlight showing clickable areas
 
 ### Multi-Monitor Support
 
@@ -49,10 +50,10 @@ xdotool click 1
 ```
 
 The zoom window provides:
-- Exact screen coordinates
-- Visual crosshair for precision
-- Grid reference system
-- One-click execution option
+- **Interactive Grid Squares**: Hover to highlight, click to execute
+- **Visual Feedback**: Yellow hover effects, red click confirmation
+- **Automatic Execution**: Moves mouse and clicks in one action
+- **Precise Targeting**: 20x20 pixel grid squares with center-point clicking
 - **Debug Mode**: Toggle checkbox to test coordinate accuracy - clicks will move mouse to target coordinates without clicking
 
 ### Grid Configuration
@@ -64,16 +65,19 @@ The default grid is 10x6 (10 columns, 6 rows) which works well for most screen s
 Enable the "Debug Mode" checkbox in the zoom window to test coordinate accuracy:
 
 1. **Check "Debug Mode"** - Orange indicator appears
-2. **Click anywhere in zoom area** - Mouse cursor moves to that exact screen coordinate
+2. **Click grid squares** - Mouse cursor moves to center of square (no clicking)
 3. **Verify position** - Check if the cursor landed where expected
 4. **Fine-tune if needed** - Use this to validate coordinate calculations
 
-Debug output appears in console:
-```
-🐛 DEBUG MODE: Moving mouse to (847, 412) for cell 23
-✅ DEBUG: Mouse moved to (847, 412)  
-📍 DEBUG: Current mouse position: x:847 y:412 screen:0 window:12345
-```
+**Normal Mode** (default):
+- Click grid square → Move mouse + execute left click
+- Red flash confirms click execution
+- Perfect for AI agents to interact with UI elements
+
+**Debug Mode**:
+- Click grid square → Move mouse only (no click)
+- Safe for testing coordinate accuracy
+- Console shows detailed movement logging
 
 ## Architecture
 
