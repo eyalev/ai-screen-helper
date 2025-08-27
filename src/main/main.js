@@ -48,6 +48,9 @@ class ScreenGridApp {
     this.overlayWindow.setIgnoreMouseEvents(false);
     this.overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
     
+    // Open dev tools for debugging
+    this.overlayWindow.webContents.openDevTools();
+    
     // Hide initially
     this.overlayWindow.hide();
 
@@ -73,6 +76,9 @@ class ScreenGridApp {
     });
 
     this.zoomWindow.loadFile(path.join(__dirname, '../renderer/zoom.html'));
+
+    // Open dev tools for debugging
+    this.zoomWindow.webContents.openDevTools();
 
     this.zoomWindow.on('closed', () => {
       console.log(`🔍 ZOOM CLOSED: executingClick=${this.executingClick}, isOverlayVisible=${this.isOverlayVisible}`);
