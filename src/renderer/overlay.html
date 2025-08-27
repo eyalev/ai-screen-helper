@@ -151,8 +151,8 @@
           cell.className = 'grid-cell';
           
           const cellNumber = row * config.cols + col + 1;
-          const x = Math.floor(col * cellWidth);
-          const y = Math.floor(row * cellHeight);
+          const x = Math.floor((screenSize.x || 0) + col * cellWidth);
+          const y = Math.floor((screenSize.y || 0) + row * cellHeight);
           
           cell.innerHTML = `
             <span class="cell-number">${cellNumber}</span>

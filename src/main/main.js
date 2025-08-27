@@ -18,12 +18,12 @@ class ScreenGridApp {
     // Get all displays and find the largest one
     const displays = screen.getAllDisplays();
     const largestDisplay = displays.reduce((largest, current) => {
-      const largestArea = largest.workAreaSize.width * largest.workAreaSize.height;
-      const currentArea = current.workAreaSize.width * current.workAreaSize.height;
+      const largestArea = largest.bounds.width * largest.bounds.height;
+      const currentArea = current.bounds.width * current.bounds.height;
       return currentArea > largestArea ? current : largest;
     });
     
-    const { width, height } = largestDisplay.workAreaSize;
+    const { width, height } = largestDisplay.bounds;
     const { x: displayX, y: displayY } = largestDisplay.bounds;
 
     this.overlayWindow = new BrowserWindow({
@@ -84,13 +84,26 @@ class ScreenGridApp {
 
   async captureScreen() {
     try {
+      // Get all displays and find the one we're using
+      const displays = screen.getAllDisplays();
+      const largestDisplay = displays.reduce((largest, current) => {
+        const largestArea = largest.bounds.width * largest.bounds.height;
+        const currentArea = current.bounds.width * current.bounds.height;
+        return currentArea > largestArea ? current : largest;
+      });
+
       const sources = await desktopCapturer.getSources({
         types: ['screen'],
-        thumbnailSize: screen.getPrimaryDisplay().workAreaSize
+        thumbnailSize: { 
+          width: largestDisplay.bounds.width,
+          height: largestDisplay.bounds.height
+        }
       });
       
       if (sources.length > 0) {
         this.currentScreenshot = sources[0].thumbnail.toDataURL();
+        this.currentDisplay = largestDisplay;
+        console.log(`📸 Captured screen: ${largestDisplay.bounds.width}x${largestDisplay.bounds.height}`);
         return this.currentScreenshot;
       }
     } catch (error) {
@@ -118,7 +131,7 @@ class ScreenGridApp {
       this.overlayWindow.webContents.send('setup-grid', {
         config: this.gridConfig,
         screenshot: this.currentScreenshot,
-        screenSize: screen.getPrimaryDisplay().workAreaSize
+        screenSize: this.currentDisplay ? this.currentDisplay.bounds : screen.getPrimaryDisplay().bounds
       });
       
       this.overlayWindow.show();
@@ -145,7 +158,7 @@ class ScreenGridApp {
         cellData,
         screenshot: this.currentScreenshot,
         config: this.gridConfig,
-        screenSize: screen.getPrimaryDisplay().workAreaSize
+        screenSize: this.currentDisplay ? this.currentDisplay.bounds : screen.getPrimaryDisplay().bounds
       });
 
       this.zoomWindow.show();
@@ -250,7 +263,7 @@ class ScreenGridApp {
       
       // Recreate overlay on the selected display
       const targetDisplay = displays[displayIndex];
-      const { width, height } = targetDisplay.workAreaSize;
+      const { width, height } = targetDisplay.bounds;
       const { x: displayX, y: displayY } = targetDisplay.bounds;
 
       this.overlayWindow = new BrowserWindow({
@@ -294,8 +307,8 @@ class ScreenGridApp {
     console.log('AI Screen Helper initialized');
     console.log(`Detected ${displays.length} display(s):`);
     displays.forEach((display, index) => {
-      const area = display.workAreaSize.width * display.workAreaSize.height;
-      console.log(`  Display ${index + 1}: ${display.workAreaSize.width}x${display.workAreaSize.height} (${Math.round(area/1000000)}MP)`);
+      const area = display.bounds.width * display.bounds.height;
+      console.log(`  Display ${index + 1}: ${display.bounds.width}x${display.bounds.height} (${Math.round(area/1000000)}MP)`);
     });
     console.log('');
     console.log('Controls:');
