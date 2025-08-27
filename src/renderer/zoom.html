@@ -214,6 +214,7 @@
     </div>
 
     <div class="action-buttons">
+      <button class="btn" id="testBtn">Test xdotool</button>
       <button class="btn" id="backBtn">Back to Grid</button>
       <button class="btn" id="closeBtn">Close</button>
       <button class="btn" id="selectBtn">Select Coordinates</button>
@@ -463,6 +464,11 @@
     }
 
     // Button handlers
+    document.getElementById('testBtn').addEventListener('click', () => {
+      console.log('🧪 Testing xdotool functionality...');
+      ipcRenderer.send('test-xdotool');
+    });
+
     document.getElementById('backBtn').addEventListener('click', () => {
       ipcRenderer.send('show-overlay-again');
       window.close();
