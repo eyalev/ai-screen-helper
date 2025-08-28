@@ -16,6 +16,11 @@
       cursor: crosshair;
       font-family: 'Courier New', monospace;
       background: rgba(0, 0, 0, 0.05);
+      outline: none; /* Remove focus outline */
+    }
+    
+    body:focus {
+      outline: none;
     }
 
     .grid-container {
@@ -255,6 +260,18 @@
       }
 
       createGrid(gridConfig, screenSize);
+      
+      // Force focus for keyboard input
+      setTimeout(() => {
+        window.focus();
+        document.body.focus();
+        
+        // Make body focusable and focused
+        document.body.setAttribute('tabindex', '0');
+        document.body.focus();
+        
+        console.log('🎯 Overlay focused for keyboard input');
+      }, 100);
     });
 
     // Variables for keyboard input

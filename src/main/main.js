@@ -37,7 +37,7 @@ class ScreenGridApp {
       alwaysOnTop: true,
       skipTaskbar: true,
       resizable: false,
-      focusable: false,
+      focusable: true,
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -47,6 +47,14 @@ class ScreenGridApp {
 
     this.overlayWindow.setIgnoreMouseEvents(false);
     this.overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
+    
+    // Ensure focus when DOM is ready
+    this.overlayWindow.webContents.once('dom-ready', () => {
+      if (this.isOverlayVisible) {
+        this.overlayWindow.focus();
+        this.overlayWindow.webContents.focus();
+      }
+    });
     
     // Hide initially
     this.overlayWindow.hide();
@@ -143,6 +151,11 @@ class ScreenGridApp {
       
       this.overlayWindow.show();
       this.overlayWindow.focus();
+      
+      // Ensure the window is actually focused and can receive keyboard events
+      this.overlayWindow.setAlwaysOnTop(false);
+      this.overlayWindow.setAlwaysOnTop(true);
+      
       this.isOverlayVisible = true;
     }
   }
