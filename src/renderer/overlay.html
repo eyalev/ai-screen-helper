@@ -114,7 +114,7 @@
   
   <div class="header-info">
     <div>AI Screen Helper - Grid Overlay</div>
-    <div>Click a numbered square to zoom in</div>
+    <div>Click a numbered square or type number + Enter to zoom in</div>
   </div>
 
   <div class="controls">
@@ -178,6 +178,71 @@
       }
     }
 
+    // Helper functions for keyboard input
+    function showKeyboardInput(input) {
+      let inputDisplay = document.getElementById('keyboard-input-display');
+      if (!inputDisplay) {
+        inputDisplay = document.createElement('div');
+        inputDisplay.id = 'keyboard-input-display';
+        inputDisplay.style.cssText = `
+          position: fixed;
+          top: 50px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0, 0, 0, 0.9);
+          color: #00ff00;
+          padding: 20px 30px;
+          border-radius: 10px;
+          font-size: 36px;
+          font-weight: bold;
+          font-family: 'Courier New', monospace;
+          z-index: 10000;
+          border: 2px solid #00ff00;
+          box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        `;
+        document.body.appendChild(inputDisplay);
+      }
+      inputDisplay.textContent = `Enter cell: ${input}`;
+      inputDisplay.style.display = 'block';
+    }
+
+    function hideKeyboardInput() {
+      const inputDisplay = document.getElementById('keyboard-input-display');
+      if (inputDisplay) {
+        inputDisplay.style.display = 'none';
+      }
+    }
+
+    function selectGridCellByNumber(cellNumber) {
+      const cells = document.querySelectorAll('.grid-cell');
+      const targetCell = Array.from(cells).find(cell => {
+        const number = parseInt(cell.querySelector('.cell-number').textContent);
+        return number === cellNumber;
+      });
+
+      if (targetCell) {
+        // Visual feedback
+        targetCell.style.background = 'rgba(0, 255, 0, 0.6)';
+        setTimeout(() => {
+          targetCell.style.background = 'rgba(255, 255, 0, 0.3)';
+        }, 200);
+
+        // Trigger the same logic as clicking
+        const cellData = {
+          number: cellNumber,
+          row: Math.floor((cellNumber - 1) / gridConfig.cols),
+          col: (cellNumber - 1) % gridConfig.cols,
+          x: ((cellNumber - 1) % gridConfig.cols) * (screenSize.width / gridConfig.cols),
+          y: Math.floor((cellNumber - 1) / gridConfig.cols) * (screenSize.height / gridConfig.rows),
+          width: screenSize.width / gridConfig.cols,
+          height: screenSize.height / gridConfig.rows
+        };
+
+        console.log('Keyboard selected cell:', cellData);
+        ipcRenderer.send('grid-cell-clicked', cellData);
+      }
+    }
+
     // Listen for setup data from main process
     ipcRenderer.on('setup-grid', (event, data) => {
       gridConfig = data.config;
@@ -192,10 +257,62 @@
       createGrid(gridConfig, screenSize);
     });
 
+    // Variables for keyboard input
+    let keyboardInput = '';
+    let keyboardTimeout = null;
+
     // Handle keyboard shortcuts
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
+        keyboardInput = '';
         ipcRenderer.send('hide-overlay');
+        return;
+      }
+
+      // Handle number input for grid cell selection
+      if (event.key >= '0' && event.key <= '9') {
+        // Add digit to input buffer
+        keyboardInput += event.key;
+        
+        // Clear existing timeout
+        if (keyboardTimeout) {
+          clearTimeout(keyboardTimeout);
+        }
+        
+        // Set timeout to clear input after 2 seconds of inactivity
+        keyboardTimeout = setTimeout(() => {
+          keyboardInput = '';
+        }, 2000);
+        
+        // Show current input visually
+        showKeyboardInput(keyboardInput);
+        
+        event.preventDefault();
+        return;
+      }
+
+      // Handle Enter key to execute selection
+      if (event.key === 'Enter' && keyboardInput.length > 0) {
+        const cellNumber = parseInt(keyboardInput);
+        if (cellNumber >= 1 && cellNumber <= (gridConfig.rows * gridConfig.cols)) {
+          selectGridCellByNumber(cellNumber);
+        }
+        keyboardInput = '';
+        hideKeyboardInput();
+        event.preventDefault();
+        return;
+      }
+
+      // Handle Backspace to remove last digit
+      if (event.key === 'Backspace' && keyboardInput.length > 0) {
+        keyboardInput = keyboardInput.slice(0, -1);
+        if (keyboardInput.length > 0) {
+          showKeyboardInput(keyboardInput);
+        } else {
+          hideKeyboardInput();
+        }
+        event.preventDefault();
+        return;
       }
     });
 

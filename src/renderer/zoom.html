@@ -195,7 +195,7 @@
     </div>
     <div style="display: flex; align-items: center; gap: 15px;">
       <div class="instructions">
-        Click grid squares to close window and execute click
+        Click grid squares or type number + Enter to execute click | Escape to close
       </div>
       <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer;">
         <input type="checkbox" id="debugMode" style="margin: 0;">
@@ -330,6 +330,8 @@
       
       console.log(`🔧 GRID: Creating ${gridCols}x${gridRows} interactive squares`);
       
+      let gridSquareNumber = 1;
+      
       for (let row = 0; row < gridRows; row++) {
         for (let col = 0; col < gridCols; col++) {
           // Create clickable grid square
@@ -350,34 +352,52 @@
           const centerX = Math.floor(currentCellData.x + (col + 0.5) * gridSize);
           const centerY = Math.floor(currentCellData.y + (row + 0.5) * gridSize);
           
-          square.title = `Click to move and click at (${centerX}, ${centerY})`;
+          square.title = `Square ${gridSquareNumber}: Click to move and click at (${centerX}, ${centerY})`;
           square.setAttribute('data-coords', `${centerX},${centerY}`);
           square.setAttribute('data-grid', `${col},${row}`);
+          square.setAttribute('data-number', gridSquareNumber);
+          
+          // Add visible number inside the square
+          const numberSpan = document.createElement('span');
+          numberSpan.textContent = gridSquareNumber;
+          numberSpan.style.cssText = `
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            color: #ffff00;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+          `;
+          square.appendChild(numberSpan);
           
           square.addEventListener('click', (event) => {
-            console.log(`🎯 GRID SQUARE CLICKED: (${col},${row}) -> (${centerX},${centerY})`);
+            console.log(`🎯 GRID SQUARE CLICKED: ${gridSquareNumber} (${col},${row}) -> (${centerX},${centerY})`);
             event.stopPropagation();
             executeClick(centerX, centerY, square);
           });
           
           square.addEventListener('mouseenter', () => {
-            console.log(`🖱️ HOVER: Grid square (${col},${row})`);
+            console.log(`🖱️ HOVER: Grid square ${gridSquareNumber} (${col},${row})`);
           });
           
           gridSquareContainer.appendChild(square);
           
-          // Add grid number text
+          // Add grid number text to SVG for debugging
           const textX = squareLeft + 5;
-          const textY = squareTop + 15;
+          const textY = squareTop + 25; // Lower to avoid overlap with number
           
           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           text.setAttribute('x', textX);
           text.setAttribute('y', textY);
-          text.setAttribute('fill', 'rgba(255, 255, 255, 0.6)');
-          text.setAttribute('font-size', '10');
+          text.setAttribute('fill', 'rgba(255, 255, 255, 0.4)');
+          text.setAttribute('font-size', '8');
           text.setAttribute('font-family', 'monospace');
-          text.textContent = `${col},${row}`;
+          text.textContent = `${gridSquareNumber}`;
           fineGrid.appendChild(text);
+          
+          gridSquareNumber++;
         }
       }
       
@@ -493,6 +513,127 @@
       console.log(`🐛 DEBUG MODE: Moving mouse to (${coordinateData.x}, ${coordinateData.y})`);
       ipcRenderer.send('debug-move-mouse', coordinateData);
     }
+
+    // Variables for keyboard input
+    let zoomKeyboardInput = '';
+    let zoomKeyboardTimeout = null;
+
+    // Helper functions for keyboard input in zoom window
+    function showZoomKeyboardInput(input) {
+      let inputDisplay = document.getElementById('zoom-keyboard-input-display');
+      if (!inputDisplay) {
+        inputDisplay = document.createElement('div');
+        inputDisplay.id = 'zoom-keyboard-input-display';
+        inputDisplay.style.cssText = `
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          background: rgba(0, 0, 0, 0.9);
+          color: #00ff00;
+          padding: 10px 15px;
+          border-radius: 5px;
+          font-size: 18px;
+          font-weight: bold;
+          font-family: 'Courier New', monospace;
+          z-index: 10000;
+          border: 2px solid #00ff00;
+          box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        `;
+        document.body.appendChild(inputDisplay);
+      }
+      inputDisplay.textContent = `Square: ${input}`;
+      inputDisplay.style.display = 'block';
+    }
+
+    function hideZoomKeyboardInput() {
+      const inputDisplay = document.getElementById('zoom-keyboard-input-display');
+      if (inputDisplay) {
+        inputDisplay.style.display = 'none';
+      }
+    }
+
+    function selectGridSquareByNumber(squareNumber) {
+      const squares = document.querySelectorAll('.grid-square');
+      const targetSquare = Array.from(squares).find(square => {
+        return parseInt(square.getAttribute('data-number')) === squareNumber;
+      });
+
+      if (targetSquare) {
+        // Visual feedback
+        targetSquare.style.background = 'rgba(0, 255, 0, 0.8)';
+        targetSquare.style.borderColor = '#00ff00';
+        
+        // Get coordinates and execute click
+        const coords = targetSquare.getAttribute('data-coords').split(',');
+        const centerX = parseInt(coords[0]);
+        const centerY = parseInt(coords[1]);
+        
+        console.log(`⌨️ KEYBOARD: Selected grid square ${squareNumber} -> (${centerX}, ${centerY})`);
+        
+        setTimeout(() => {
+          executeClick(centerX, centerY, targetSquare);
+        }, 200); // Brief delay to show visual feedback
+      }
+    }
+
+    // Keyboard event handler for zoom window
+    document.addEventListener('keydown', (event) => {
+      // Handle number input for grid square selection
+      if (event.key >= '0' && event.key <= '9') {
+        zoomKeyboardInput += event.key;
+        
+        // Clear existing timeout
+        if (zoomKeyboardTimeout) {
+          clearTimeout(zoomKeyboardTimeout);
+        }
+        
+        // Set timeout to clear input after 2 seconds
+        zoomKeyboardTimeout = setTimeout(() => {
+          zoomKeyboardInput = '';
+          hideZoomKeyboardInput();
+        }, 2000);
+        
+        showZoomKeyboardInput(zoomKeyboardInput);
+        event.preventDefault();
+        return;
+      }
+
+      // Handle Enter key to execute selection
+      if (event.key === 'Enter' && zoomKeyboardInput.length > 0) {
+        const squareNumber = parseInt(zoomKeyboardInput);
+        const totalSquares = document.querySelectorAll('.grid-square').length;
+        
+        if (squareNumber >= 1 && squareNumber <= totalSquares) {
+          selectGridSquareByNumber(squareNumber);
+        }
+        
+        zoomKeyboardInput = '';
+        hideZoomKeyboardInput();
+        event.preventDefault();
+        return;
+      }
+
+      // Handle Backspace to remove last digit
+      if (event.key === 'Backspace' && zoomKeyboardInput.length > 0) {
+        zoomKeyboardInput = zoomKeyboardInput.slice(0, -1);
+        if (zoomKeyboardInput.length > 0) {
+          showZoomKeyboardInput(zoomKeyboardInput);
+        } else {
+          hideZoomKeyboardInput();
+        }
+        event.preventDefault();
+        return;
+      }
+
+      // Handle Escape to close window
+      if (event.key === 'Escape') {
+        zoomKeyboardInput = '';
+        hideZoomKeyboardInput();
+        window.close();
+        event.preventDefault();
+        return;
+      }
+    });
 
     // Button handlers
     document.getElementById('testBtn').addEventListener('click', () => {

@@ -42,12 +42,22 @@ npm start
 
 ### Controls
 
+#### Global Hotkeys
 - **Ctrl+Shift+G**: Toggle grid overlay
 - **Ctrl+Shift+1**: Switch to display 1 
 - **Ctrl+Shift+2**: Switch to display 2
 - **Escape**: Hide overlay
+
+#### Grid Overlay (Yellow numbered squares)
 - **Click numbered square**: Open zoom window for that area
-- **Click grid square in zoom**: Close zoom window and execute mouse click
+- **Type number + Enter**: Select grid cell by keyboard (e.g., type "12" then Enter for cell 12)
+- **Backspace**: Remove last typed digit
+
+#### Zoom Window (Red numbered squares with incremental numbering)
+- **Click grid square**: Close zoom window and execute mouse click
+- **Type number + Enter**: Select grid square by keyboard (e.g., type "5" then Enter for square 5)
+- **Backspace**: Remove last typed digit  
+- **Escape**: Close zoom window
 - **Hover grid squares**: Visual highlight showing clickable areas
 
 ### Multi-Monitor Support
@@ -58,7 +68,29 @@ The app automatically detects all displays and targets the largest screen by def
 
 ### For AI Agents
 
-The tool outputs xdotool-compatible commands to the console:
+#### Keyboard-First Design
+The tool now supports **keyboard-only operation**, perfect for AI agents:
+
+**Main Grid Selection:**
+```bash
+# Type the grid cell number (1-60) then Enter
+"12" + Enter  # Selects grid cell 12 and opens zoom window
+```
+
+**Zoom Grid Selection:**  
+```bash
+# Type the square number (1-N) then Enter  
+"5" + Enter   # Selects zoom square 5 and executes click
+```
+
+**Complete AI Workflow:**
+1. Show overlay: `Ctrl+Shift+G`
+2. Select main grid: Type `"12"` + `Enter` 
+3. Select zoom square: Type `"5"` + `Enter`
+4. Mouse automatically moves and clicks at precise coordinates
+
+#### Traditional Output
+The tool still outputs xdotool-compatible commands to console:
 
 ```bash
 xdotool mousemove 850 450
