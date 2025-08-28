@@ -16,16 +16,22 @@ A screen grid overlay tool designed to help AI agents perform precise mouse targ
 
 #### Quick Install (Debian/Ubuntu) - Recommended
 
-**One-liner command:**
+**Download and run (secure):**
 ```bash
-curl -s https://raw.githubusercontent.com/eyalev/ai-screen-helper/master/install-latest.sh | sudo bash
-```
-
-**Or download and run:**
-```bash
+# Download the installer script
 wget https://raw.githubusercontent.com/eyalev/ai-screen-helper/master/install-latest.sh
+
+# Inspect the script (recommended)
+less install-latest.sh
+
+# Make executable and run
 chmod +x install-latest.sh
 sudo ./install-latest.sh
+```
+
+**One-liner (inspect first):**
+```bash
+curl -O https://raw.githubusercontent.com/eyalev/ai-screen-helper/master/install-latest.sh && chmod +x install-latest.sh && sudo ./install-latest.sh
 ```
 
 **Features:**
@@ -34,6 +40,8 @@ sudo ./install-latest.sh
 - ✅ Prompts before reinstalling same version
 - ✅ Handles dependency issues automatically
 - ✅ Verifies installation success
+
+> **🔒 Security Note**: Always inspect scripts before running with sudo privileges. The script is open source and available for review on GitHub.
 
 #### AppImage (Portable)
 
@@ -67,7 +75,9 @@ npm start
 
 ```bash
 # Re-run the install script to get the latest version
-curl -s https://raw.githubusercontent.com/eyalev/ai-screen-helper/master/install-latest.sh | sudo bash
+wget https://raw.githubusercontent.com/eyalev/ai-screen-helper/master/install-latest.sh
+chmod +x install-latest.sh
+sudo ./install-latest.sh
 ```
 
 The script will:
