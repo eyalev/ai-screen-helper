@@ -659,6 +659,25 @@
       window.close();
     });
 
+    // Handle global enter command (Ctrl+Shift+M backup)
+    ipcRenderer.on('global-enter-command', () => {
+      console.log('🌐 ZOOM GLOBAL ENTER: Received global enter command');
+      if (zoomKeyboardInput.length > 0) {
+        console.log(`🌐 ZOOM GLOBAL ENTER: Executing selection for input: ${zoomKeyboardInput}`);
+        const squareNumber = parseInt(zoomKeyboardInput);
+        const totalSquares = document.querySelectorAll('.grid-square').length;
+        
+        if (squareNumber >= 1 && squareNumber <= totalSquares) {
+          selectGridSquareByNumber(squareNumber);
+        }
+        
+        zoomKeyboardInput = '';
+        hideZoomKeyboardInput();
+      } else {
+        console.log('🌐 ZOOM GLOBAL ENTER: No keyboard input to execute');
+      }
+    });
+
     // Handle zoom data from main process
     ipcRenderer.on('show-zoom', (event, data) => {
       setupZoomView(data);

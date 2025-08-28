@@ -248,6 +248,22 @@
       }
     }
 
+    // Handle global enter command (Ctrl+Shift+M backup)
+    ipcRenderer.on('global-enter-command', () => {
+      console.log('🌐 GLOBAL ENTER: Received global enter command');
+      if (keyboardInput.length > 0) {
+        console.log(`🌐 GLOBAL ENTER: Executing selection for input: ${keyboardInput}`);
+        const cellNumber = parseInt(keyboardInput);
+        if (cellNumber >= 1 && cellNumber <= (gridConfig.rows * gridConfig.cols)) {
+          selectGridCellByNumber(cellNumber);
+        }
+        keyboardInput = '';
+        hideKeyboardInput();
+      } else {
+        console.log('🌐 GLOBAL ENTER: No keyboard input to execute');
+      }
+    });
+
     // Listen for setup data from main process
     ipcRenderer.on('setup-grid', (event, data) => {
       gridConfig = data.config;
@@ -274,6 +290,23 @@
       }, 100);
     });
 
+    // Handle window focus events to maintain keyboard input state
+    window.addEventListener('focus', () => {
+      console.log('🎯 Overlay regained focus');
+      // Re-show keyboard input if it exists
+      if (keyboardInput.length > 0) {
+        showKeyboardInput(keyboardInput);
+      }
+      // Ensure body remains focusable
+      document.body.setAttribute('tabindex', '0');
+      document.body.focus();
+    });
+
+    window.addEventListener('blur', () => {
+      console.log('⚠️ Overlay lost focus - keyboard input preserved');
+      // Keep input display visible even when losing focus
+    });
+
     // Variables for keyboard input
     let keyboardInput = '';
     let keyboardTimeout = null;
@@ -296,13 +329,20 @@
           clearTimeout(keyboardTimeout);
         }
         
-        // Set timeout to clear input after 2 seconds of inactivity
+        // Set timeout to clear input after 5 seconds of inactivity (increased for AI agents)
         keyboardTimeout = setTimeout(() => {
           keyboardInput = '';
-        }, 2000);
+          hideKeyboardInput();
+        }, 5000);
         
         // Show current input visually
         showKeyboardInput(keyboardInput);
+        
+        // Force re-focus in case we lost it
+        setTimeout(() => {
+          window.focus();
+          document.body.focus();
+        }, 10);
         
         event.preventDefault();
         return;

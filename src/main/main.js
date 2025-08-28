@@ -467,6 +467,17 @@ class ScreenGridApp {
       this.switchToDisplay(1);
     });
 
+    // Ctrl+Shift+M to execute enter for current keyboard input (backup for AI agents)
+    globalShortcut.register('CommandOrControl+Shift+M', () => {
+      if (this.isOverlayVisible && this.overlayWindow) {
+        console.log('🎯 GLOBAL ENTER: Sending enter command to overlay');
+        this.overlayWindow.webContents.send('global-enter-command');
+      } else if (this.zoomWindow && this.zoomWindow.isVisible()) {
+        console.log('🎯 GLOBAL ENTER: Sending enter command to zoom window');
+        this.zoomWindow.webContents.send('global-enter-command');
+      }
+    });
+
     // Escape to hide overlay
     globalShortcut.register('Escape', () => {
       if (this.isOverlayVisible) {
@@ -543,6 +554,7 @@ class ScreenGridApp {
     console.log('');
     console.log('Controls:');
     console.log('  Ctrl+Shift+G: Toggle grid overlay');
+    console.log('  Ctrl+Shift+M: Execute Enter for keyboard input (AI agent backup)');
     console.log('  Ctrl+Shift+1: Switch to display 1');
     console.log('  Ctrl+Shift+2: Switch to display 2'); 
     console.log('  Escape: Hide overlay');

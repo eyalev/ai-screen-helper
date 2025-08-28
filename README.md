@@ -94,6 +94,7 @@ The script will:
 
 #### Global Hotkeys
 - **Ctrl+Shift+G**: Toggle grid overlay
+- **Ctrl+Shift+M**: Execute Enter for current keyboard input (AI agent backup)
 - **Ctrl+Shift+1**: Switch to display 1 
 - **Ctrl+Shift+2**: Switch to display 2
 - **Escape**: Hide overlay
@@ -135,9 +136,14 @@ The tool now supports **keyboard-only operation**, perfect for AI agents:
 
 **Complete AI Workflow:**
 1. Show overlay: `Ctrl+Shift+G`
-2. Select main grid: Type `"12"` + `Enter` 
-3. Select zoom square: Type `"5"` + `Enter`
+2. Select main grid: Type `"12"` + `Enter` (or `Ctrl+Shift+M` as backup)
+3. Select zoom square: Type `"5"` + `Enter` (or `Ctrl+Shift+M` as backup)
 4. Mouse automatically moves and clicks at precise coordinates
+
+**AI Agent Notes:**
+- If `xdotool key Return` doesn't work, use `xdotool key ctrl+shift+m` instead
+- Input persists for 5 seconds and survives brief focus loss
+- Global `Ctrl+Shift+M` works even when overlay loses focus
 
 #### Traditional Output
 The tool still outputs xdotool-compatible commands to console:
