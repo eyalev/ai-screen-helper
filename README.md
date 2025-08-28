@@ -14,13 +14,34 @@ A screen grid overlay tool designed to help AI agents perform precise mouse targ
 
 ### Installation
 
-#### AppImage (Recommended)
+#### Quick Install (Debian/Ubuntu) - Recommended
+
+**One-liner command:**
+```bash
+curl -s https://raw.githubusercontent.com/eyalev/ai-screen-helper/master/install-latest.sh | sudo bash
+```
+
+**Or download and run:**
+```bash
+wget https://raw.githubusercontent.com/eyalev/ai-screen-helper/master/install-latest.sh
+chmod +x install-latest.sh
+sudo ./install-latest.sh
+```
+
+**Features:**
+- ✅ Automatically downloads latest release
+- ✅ Checks installed version to avoid unnecessary reinstalls  
+- ✅ Prompts before reinstalling same version
+- ✅ Handles dependency issues automatically
+- ✅ Verifies installation success
+
+#### AppImage (Portable)
 
 1. Download the latest `.AppImage` file from [Releases](https://github.com/eyalev/ai-screen-helper/releases)
 2. Make it executable: `chmod +x AI-Screen-Helper-*.AppImage`
 3. Run it: `./AI-Screen-Helper-*.AppImage`
 
-#### Debian Package
+#### Manual Debian Package
 
 1. Download the latest `.deb` file from [Releases](https://github.com/eyalev/ai-screen-helper/releases)
 2. Install: `sudo dpkg -i ai-screen-helper_*.deb`
@@ -39,6 +60,25 @@ npm install
 ```bash
 npm start
 ```
+
+### Updating
+
+#### Automatic Update (Debian Package)
+
+```bash
+# Re-run the install script to get the latest version
+curl -s https://raw.githubusercontent.com/eyalev/ai-screen-helper/master/install-latest.sh | sudo bash
+```
+
+The script will:
+- Check your current version vs latest release
+- Prompt before reinstalling if versions match
+- Automatically upgrade if a newer version is available
+
+#### Manual Update
+
+- **AppImage**: Download the latest version and replace the old file
+- **Debian Package**: Download and install the new `.deb` file
 
 ### Controls
 
