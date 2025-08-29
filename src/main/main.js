@@ -1,17 +1,20 @@
-const { app, BrowserWindow, globalShortcut, screen, desktopCapturer, ipcMain } = require('electron');
+const { app, BrowserWindow, globalShortcut, screen, desktopCapturer, ipcMain, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 
 class ScreenGridApp {
   constructor() {
     this.overlayWindow = null;
     this.zoomWindow = null;
+    this.settingsWindow = null;
+    this.tray = null;
     this.isOverlayVisible = false;
     this.currentScreenshot = null;
     this.executingClick = false;
     this.gridConfig = {
       rows: 6,
       cols: 10,
-      zoomFactor: 3
+      zoomFactor: 3,
+      zoomPadding: 0.5 // Default padding as fraction of grid square size (0.5 = half grid square)
     };
   }
 
@@ -58,8 +61,8 @@ class ScreenGridApp {
 
   async createZoomWindow() {
     this.zoomWindow = new BrowserWindow({
-      width: 600,
-      height: 600,
+      width: 800,
+      height: 800,
       frame: true,
       transparent: false,
       alwaysOnTop: true,
@@ -87,6 +90,89 @@ class ScreenGridApp {
         this.executingClick = false;
       }, 3000);
     });
+  }
+
+  async createSettingsWindow() {
+    this.settingsWindow = new BrowserWindow({
+      width: 450,
+      height: 600,
+      frame: true,
+      transparent: false,
+      alwaysOnTop: false,
+      resizable: false,
+      show: false,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+        enableRemoteModule: true
+      }
+    });
+
+    this.settingsWindow.loadFile(path.join(__dirname, '../renderer/settings.html'));
+
+    this.settingsWindow.on('closed', () => {
+      this.settingsWindow = null;
+    });
+
+    this.settingsWindow.on('close', (event) => {
+      if (!app.isQuitting) {
+        event.preventDefault();
+        this.settingsWindow.hide();
+      }
+    });
+  }
+
+  createSystemTray() {
+    // Create a simple 16x16 icon programmatically
+    const icon = nativeImage.createFromDataURL(
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFkSURBVDiNpZM9SwNBEIafgxCwsLGwsLW1tbW1sLGwsLaxsLGwsLW1tbW1sLGwsLW1sLGwsLW1tbaxsLGwsLW1tbGwsLGwsLW1sLGwsLGwsLW1tbGwsLGwsLW1tbGwsLGwsLW1tbGwsLGwsLW1tbGwsLGwsLW1tZ+7mZ2ZnXmfmZ2ZnQEAAP//7L9hDAAAAwBJREFUeJyl081rE1EQB/DfJm2S1qRJ2qRpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZpmqZp/s/8P/4B8wJwBzALcAcwC3AHMAtw'
+    );
+
+    this.tray = new Tray(icon);
+
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'AI Screen Helper',
+        enabled: false
+      },
+      { type: 'separator' },
+      {
+        label: 'Toggle Grid Overlay',
+        click: () => {
+          this.toggleOverlay();
+        }
+      },
+      {
+        label: 'Settings',
+        click: () => {
+          this.showSettings();
+        }
+      },
+      { type: 'separator' },
+      {
+        label: 'Quit',
+        click: () => {
+          app.isQuitting = true;
+          app.quit();
+        }
+      }
+    ]);
+
+    this.tray.setContextMenu(contextMenu);
+    this.tray.setToolTip('AI Screen Helper - Grid Overlay Tool');
+
+    this.tray.on('click', () => {
+      this.toggleOverlay();
+    });
+  }
+
+  showSettings() {
+    if (!this.settingsWindow) {
+      this.createSettingsWindow();
+    }
+    this.settingsWindow.webContents.send('load-settings', this.gridConfig);
+    this.settingsWindow.show();
+    this.settingsWindow.focus();
   }
 
   async captureScreen() {
@@ -387,6 +473,36 @@ class ScreenGridApp {
         }
       });
     });
+
+    // Settings IPC handlers
+    ipcMain.on('save-settings', (event, newConfig) => {
+      console.log('💾 SETTINGS: Saving new configuration', newConfig);
+      this.gridConfig = { ...this.gridConfig, ...newConfig };
+      
+      // Update any open overlay with new config
+      if (this.overlayWindow && this.isOverlayVisible) {
+        this.overlayWindow.webContents.send('setup-grid', {
+          config: this.gridConfig,
+          screenshot: this.currentScreenshot,
+          screenSize: this.currentDisplay ? this.currentDisplay.bounds : screen.getPrimaryDisplay().bounds
+        });
+      }
+      
+      // Respond to settings window
+      event.reply('settings-saved', this.gridConfig);
+    });
+
+    ipcMain.on('reset-settings', (event) => {
+      console.log('🔄 SETTINGS: Resetting to defaults');
+      this.gridConfig = {
+        rows: 6,
+        cols: 10,
+        zoomFactor: 3,
+        zoomPadding: 0.5
+      };
+      
+      event.reply('settings-reset', this.gridConfig);
+    });
   }
 
   executeActualClick(data) {
@@ -519,6 +635,7 @@ class ScreenGridApp {
     await this.createOverlayWindow();
     this.setupIpcHandlers();
     this.registerGlobalShortcuts();
+    this.createSystemTray();
     
     const displays = screen.getAllDisplays();
     console.log('AI Screen Helper initialized');
@@ -533,6 +650,7 @@ class ScreenGridApp {
     console.log('  Ctrl+Shift+1: Switch to display 1');
     console.log('  Ctrl+Shift+2: Switch to display 2'); 
     console.log('  Escape: Hide overlay');
+    console.log('  System tray: Right-click for menu');
   }
 }
 

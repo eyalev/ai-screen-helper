@@ -81,11 +81,11 @@
 
     .grid-square {
       position: absolute;
-      border: 1px solid rgba(255, 255, 0, 0.3);
-      background: rgba(255, 255, 0, 0.05);
+      border: 2px solid rgba(255, 255, 0, 0.6);
+      background: rgba(255, 255, 0, 0.15);
       cursor: pointer;
       transition: all 0.2s ease;
-      z-index: 15;
+      z-index: 25;
       pointer-events: all;
     }
 
@@ -258,11 +258,11 @@
         `Cell: ${currentCellData.number} | Area: ${currentCellData.width}×${currentCellData.height}px`;
 
       drawZoomedArea();
-      createFineGrid();
+      // createFineGrid() is now called from within drawZoomedArea() after image loads
     }
 
     function drawZoomedArea() {
-      if (!currentScreenshot || !currentCellData) return;
+      if (!currentScreenshot || !currentCellData || !currentConfig) return;
 
       const img = new Image();
       img.onload = function() {
@@ -270,11 +270,33 @@
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
 
-        // Calculate source rectangle from the original screenshot
-        const sourceX = currentCellData.x;
-        const sourceY = currentCellData.y;
-        const sourceWidth = currentCellData.width;
-        const sourceHeight = currentCellData.height;
+        // Calculate padding in pixels
+        const paddingX = currentCellData.width * (currentConfig.zoomPadding || 0.5);
+        const paddingY = currentCellData.height * (currentConfig.zoomPadding || 0.5);
+
+        // Calculate source rectangle with padding
+        const sourceX = Math.max(0, currentCellData.x - paddingX);
+        const sourceY = Math.max(0, currentCellData.y - paddingY);
+        const sourceWidth = Math.min(
+          currentScreenSize.width - sourceX, 
+          currentCellData.width + (2 * paddingX)
+        );
+        const sourceHeight = Math.min(
+          currentScreenSize.height - sourceY, 
+          currentCellData.height + (2 * paddingY)
+        );
+
+        // Store the actual source area for coordinate calculations
+        window.zoomAreaBounds = {
+          x: sourceX,
+          y: sourceY,
+          width: sourceWidth,
+          height: sourceHeight,
+          originalCellX: currentCellData.x,
+          originalCellY: currentCellData.y,
+          originalCellWidth: currentCellData.width,
+          originalCellHeight: currentCellData.height
+        };
 
         // Draw the zoomed portion
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -284,23 +306,43 @@
           sourceX, sourceY, sourceWidth, sourceHeight,
           0, 0, canvas.width, canvas.height
         );
+
+        console.log(`🔍 ZOOM AREA: Original cell (${currentCellData.x}, ${currentCellData.y}) ${currentCellData.width}x${currentCellData.height}`);
+        console.log(`🔍 ZOOM AREA: With padding (${sourceX}, ${sourceY}) ${sourceWidth}x${sourceHeight}`);
+        console.log(`🔍 ZOOM PADDING: ${currentConfig.zoomPadding} (${paddingX.toFixed(1)}px x ${paddingY.toFixed(1)}px)`);
+        
+        // Create the fine grid after the image is loaded and bounds are set
+        setTimeout(() => {
+          createFineGrid();
+        }, 100);
       };
       img.src = currentScreenshot;
     }
 
     function createFineGrid() {
-      if (!currentCellData) return;
+      if (!currentCellData || !window.zoomAreaBounds) {
+        console.error('🚫 GRID: Missing data for grid creation', {
+          currentCellData: !!currentCellData,
+          zoomAreaBounds: !!window.zoomAreaBounds
+        });
+        return;
+      }
 
+      console.log('🎯 GRID: Starting grid creation...');
       fineGrid.innerHTML = '';
       const gridSquareContainer = document.getElementById('gridSquareContainer');
       gridSquareContainer.innerHTML = '';
       
-      const gridSize = 20; // 20x20 pixel grid
+      const gridSize = 30; // 30x30 pixel grid for better visibility
       const canvasRect = canvas.getBoundingClientRect();
+      const bounds = window.zoomAreaBounds;
       
-      // Create vertical lines
-      for (let i = 0; i <= currentCellData.width; i += gridSize) {
-        const x = (i / currentCellData.width) * canvasRect.width;
+      console.log('🔧 GRID: Canvas rect:', canvasRect);
+      console.log('🔧 GRID: Zoom bounds:', bounds);
+      
+      // Create vertical lines based on the zoom area width
+      for (let i = 0; i <= bounds.width; i += gridSize) {
+        const x = (i / bounds.width) * canvasRect.width;
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', x);
         line.setAttribute('y1', 0);
@@ -311,9 +353,9 @@
         fineGrid.appendChild(line);
       }
 
-      // Create horizontal lines
-      for (let i = 0; i <= currentCellData.height; i += gridSize) {
-        const y = (i / currentCellData.height) * canvasRect.height;
+      // Create horizontal lines based on the zoom area height
+      for (let i = 0; i <= bounds.height; i += gridSize) {
+        const y = (i / bounds.height) * canvasRect.height;
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', 0);
         line.setAttribute('y1', y);
@@ -325,8 +367,8 @@
       }
 
       // Create interactive grid squares and add grid numbers
-      const gridCols = Math.ceil(currentCellData.width / gridSize);
-      const gridRows = Math.ceil(currentCellData.height / gridSize);
+      const gridCols = Math.ceil(bounds.width / gridSize);
+      const gridRows = Math.ceil(bounds.height / gridSize);
       
       console.log(`🔧 GRID: Creating ${gridCols}x${gridRows} interactive squares`);
       
@@ -338,19 +380,19 @@
           const square = document.createElement('div');
           square.className = 'grid-square';
           
-          const squareLeft = (col * gridSize / currentCellData.width) * canvasRect.width;
-          const squareTop = (row * gridSize / currentCellData.height) * canvasRect.height;
-          const squareWidth = (gridSize / currentCellData.width) * canvasRect.width;
-          const squareHeight = (gridSize / currentCellData.height) * canvasRect.height;
+          const squareLeft = (col * gridSize / bounds.width) * canvasRect.width;
+          const squareTop = (row * gridSize / bounds.height) * canvasRect.height;
+          const squareWidth = (gridSize / bounds.width) * canvasRect.width;
+          const squareHeight = (gridSize / bounds.height) * canvasRect.height;
           
           square.style.left = squareLeft + 'px';
           square.style.top = squareTop + 'px';
           square.style.width = squareWidth + 'px';
           square.style.height = squareHeight + 'px';
           
-          // Calculate center coordinates for this grid square
-          const centerX = Math.floor(currentCellData.x + (col + 0.5) * gridSize);
-          const centerY = Math.floor(currentCellData.y + (row + 0.5) * gridSize);
+          // Calculate center coordinates for this grid square (in screen coordinates)
+          const centerX = Math.floor(bounds.x + (col + 0.5) * gridSize);
+          const centerY = Math.floor(bounds.y + (row + 0.5) * gridSize);
           
           square.title = `Square ${gridSquareNumber}: Click to move and click at (${centerX}, ${centerY})`;
           square.setAttribute('data-coords', `${centerX},${centerY}`);
@@ -403,6 +445,20 @@
       
       console.log(`✅ GRID CREATION COMPLETE: ${gridSquareContainer.children.length} interactive squares added`);
       console.log(`🔧 CONTAINER: gridSquareContainer positioned and styled`);
+      
+      // Additional debug info
+      console.log('🎯 GRID: Grid squares created:', gridSquareContainer.children.length);
+      console.log('🎯 GRID: Sample first square:', gridSquareContainer.children[0] ? {
+        left: gridSquareContainer.children[0].style.left,
+        top: gridSquareContainer.children[0].style.top,
+        width: gridSquareContainer.children[0].style.width,
+        height: gridSquareContainer.children[0].style.height,
+        coords: gridSquareContainer.children[0].getAttribute('data-coords')
+      } : 'No squares created');
+      
+      // Make sure container is visible
+      gridSquareContainer.style.display = 'block';
+      gridSquareContainer.style.zIndex = '25';
     }
 
     function executeClick(x, y, squareElement) {
@@ -446,17 +502,20 @@
 
     // Mouse tracking
     canvas.addEventListener('mousemove', (event) => {
+      if (!window.zoomAreaBounds) return;
+      
       const rect = canvas.getBoundingClientRect();
       const canvasX = event.clientX - rect.left;
       const canvasY = event.clientY - rect.top;
+      const bounds = window.zoomAreaBounds;
 
-      // Calculate relative position within the cell
-      const relativeX = (canvasX / rect.width) * currentCellData.width;
-      const relativeY = (canvasY / rect.height) * currentCellData.height;
+      // Calculate relative position within the zoom area
+      const relativeX = (canvasX / rect.width) * bounds.width;
+      const relativeY = (canvasY / rect.height) * bounds.height;
 
       // Calculate actual screen coordinates
-      actualMousePos.x = Math.floor(currentCellData.x + relativeX);
-      actualMousePos.y = Math.floor(currentCellData.y + relativeY);
+      actualMousePos.x = Math.floor(bounds.x + relativeX);
+      actualMousePos.y = Math.floor(bounds.y + relativeY);
 
       currentMousePos.x = Math.floor(canvasX);
       currentMousePos.y = Math.floor(canvasY);
