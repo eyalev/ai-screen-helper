@@ -250,6 +250,17 @@
       </div>
     </div>
 
+    <div class="setting-item">
+      <div class="setting-label">
+        <div class="name">Grid Opacity</div>
+        <div class="description">Transparency of grid borders, numbers, and backgrounds</div>
+      </div>
+      <div class="setting-control">
+        <input type="range" id="gridOpacity" min="0.1" max="1.0" step="0.1" value="0.8">
+        <span class="current-value" id="gridOpacityValue">0.8</span>
+      </div>
+    </div>
+
     <div class="preview">
       <div class="title">Grid Preview</div>
       <span id="gridPreview">6 rows × 10 columns = 60 total cells</span>
@@ -314,11 +325,13 @@
     const elements = {
       rows: document.getElementById('rows'),
       cols: document.getElementById('cols'),
+      gridOpacity: document.getElementById('gridOpacity'),
       zoomFactor: document.getElementById('zoomFactor'),
       zoomPadding: document.getElementById('zoomPadding'),
       
       rowsValue: document.getElementById('rowsValue'),
       colsValue: document.getElementById('colsValue'),
+      gridOpacityValue: document.getElementById('gridOpacityValue'),
       zoomFactorValue: document.getElementById('zoomFactorValue'),
       zoomPaddingValue: document.getElementById('zoomPaddingValue'),
       
@@ -334,6 +347,7 @@
     function updatePreviews() {
       const rows = parseInt(elements.rows.value);
       const cols = parseInt(elements.cols.value);
+      const gridOpacity = parseFloat(elements.gridOpacity.value);
       const zoomFactor = parseInt(elements.zoomFactor.value);
       const zoomPadding = parseFloat(elements.zoomPadding.value);
       
@@ -343,6 +357,7 @@
       // Update value displays
       elements.rowsValue.textContent = rows;
       elements.colsValue.textContent = cols;
+      elements.gridOpacityValue.textContent = `${Math.round(gridOpacity * 100)}%`;
       elements.zoomFactorValue.textContent = `${zoomFactor}x`;
       elements.zoomPaddingValue.textContent = zoomPadding.toFixed(1);
     }
@@ -352,6 +367,7 @@
       
       elements.rows.value = settings.rows;
       elements.cols.value = settings.cols;
+      elements.gridOpacity.value = settings.gridOpacity || 0.8;
       elements.zoomFactor.value = settings.zoomFactor;
       elements.zoomPadding.value = settings.zoomPadding;
       
@@ -362,6 +378,7 @@
       const newSettings = {
         rows: parseInt(elements.rows.value),
         cols: parseInt(elements.cols.value),
+        gridOpacity: parseFloat(elements.gridOpacity.value),
         zoomFactor: parseInt(elements.zoomFactor.value),
         zoomPadding: parseFloat(elements.zoomPadding.value)
       };
@@ -383,7 +400,7 @@
     }
 
     // Event listeners for real-time updates
-    ['rows', 'cols', 'zoomFactor', 'zoomPadding'].forEach(id => {
+    ['rows', 'cols', 'gridOpacity', 'zoomFactor', 'zoomPadding'].forEach(id => {
       elements[id].addEventListener('input', updatePreviews);
     });
 
