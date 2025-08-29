@@ -1,5 +1,6 @@
 const { app, BrowserWindow, globalShortcut, screen, desktopCapturer, ipcMain, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 class ScreenGridApp {
   constructor() {
@@ -10,13 +11,49 @@ class ScreenGridApp {
     this.isOverlayVisible = false;
     this.currentScreenshot = null;
     this.executingClick = false;
-    this.gridConfig = {
+    this.settingsPath = path.join(app.getPath('userData'), 'settings.json');
+    this.defaultGridConfig = {
       rows: 6,
       cols: 10,
       gridOpacity: 0.8, // Default opacity for grid elements (borders, numbers, backgrounds)
       zoomFactor: 3,
       zoomPadding: 0.5 // Default padding as fraction of grid square size (0.5 = half grid square)
     };
+    this.gridConfig = { ...this.defaultGridConfig };
+  }
+
+  loadSettings() {
+    try {
+      if (fs.existsSync(this.settingsPath)) {
+        const data = fs.readFileSync(this.settingsPath, 'utf8');
+        const savedSettings = JSON.parse(data);
+        
+        // Merge with defaults to ensure all properties exist
+        this.gridConfig = { ...this.defaultGridConfig, ...savedSettings };
+        console.log('💾 SETTINGS: Loaded from disk:', this.gridConfig);
+      } else {
+        console.log('💾 SETTINGS: No settings file found, using defaults');
+      }
+    } catch (error) {
+      console.error('❌ SETTINGS: Failed to load settings:', error.message);
+      this.gridConfig = { ...this.defaultGridConfig };
+    }
+  }
+
+  saveSettings() {
+    try {
+      // Ensure userData directory exists
+      const userDataDir = app.getPath('userData');
+      if (!fs.existsSync(userDataDir)) {
+        fs.mkdirSync(userDataDir, { recursive: true });
+      }
+      
+      const data = JSON.stringify(this.gridConfig, null, 2);
+      fs.writeFileSync(this.settingsPath, data, 'utf8');
+      console.log('💾 SETTINGS: Saved to disk:', this.gridConfig);
+    } catch (error) {
+      console.error('❌ SETTINGS: Failed to save settings:', error.message);
+    }
   }
 
   async createOverlayWindow() {
@@ -480,6 +517,9 @@ class ScreenGridApp {
       console.log('💾 SETTINGS: Saving new configuration', newConfig);
       this.gridConfig = { ...this.gridConfig, ...newConfig };
       
+      // Save to disk
+      this.saveSettings();
+      
       // Update any open overlay with new config
       if (this.overlayWindow && this.isOverlayVisible) {
         this.overlayWindow.webContents.send('setup-grid', {
@@ -495,13 +535,10 @@ class ScreenGridApp {
 
     ipcMain.on('reset-settings', (event) => {
       console.log('🔄 SETTINGS: Resetting to defaults');
-      this.gridConfig = {
-        rows: 6,
-        cols: 10,
-        gridOpacity: 0.8,
-        zoomFactor: 3,
-        zoomPadding: 0.5
-      };
+      this.gridConfig = { ...this.defaultGridConfig };
+      
+      // Save to disk
+      this.saveSettings();
       
       event.reply('settings-reset', this.gridConfig);
     });
@@ -634,6 +671,9 @@ class ScreenGridApp {
   }
 
   async initialize() {
+    // Load settings from disk first
+    this.loadSettings();
+    
     await this.createOverlayWindow();
     this.setupIpcHandlers();
     this.registerGlobalShortcuts();
