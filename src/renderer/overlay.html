@@ -137,7 +137,7 @@
   
   <div class="header-info">
     <div>AI Screen Helper - Grid Overlay</div>
-    <div>Click a numbered square or type number + Enter to zoom in</div>
+    <div>Click a numbered square or type number + Enter (or Ctrl+Shift+F) to zoom in</div>
   </div>
 
   <div class="controls">
@@ -291,7 +291,9 @@
     function selectGridCellByNumber(cellNumber) {
       const cells = document.querySelectorAll('.grid-cell');
       const targetCell = Array.from(cells).find(cell => {
-        const number = parseInt(cell.querySelector('.cell-number').textContent);
+        const cellText = cell.querySelector('.cell-number').textContent;
+        // Extract number from text that might have prefix/suffix (e.g., "[1]" -> 1)
+        const number = parseInt(cellText.replace(/[^\d]/g, ''));
         return number === cellNumber;
       });
 
@@ -371,8 +373,8 @@
         return;
       }
 
-      // Handle Enter key to execute selection
-      if (event.key === 'Enter' && keyboardInput.length > 0) {
+      // Handle Enter key or Ctrl+Shift+F to execute selection
+      if ((event.key === 'Enter' || (event.key === 'F' && event.ctrlKey && event.shiftKey)) && keyboardInput.length > 0) {
         const cellNumber = parseInt(keyboardInput);
         if (cellNumber >= 1 && cellNumber <= (gridConfig.rows * gridConfig.cols)) {
           selectGridCellByNumber(cellNumber);

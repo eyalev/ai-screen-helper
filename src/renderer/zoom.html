@@ -196,7 +196,7 @@
     </div>
     <div style="display: flex; align-items: center; gap: 15px;">
       <div class="instructions">
-        Click grid squares or type number + Enter to execute click | Escape to close
+        Click grid squares or type number + Enter (or Ctrl+Shift+F) to execute click | Escape to close
       </div>
       <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer;">
         <input type="checkbox" id="debugMode" style="margin: 0;">
@@ -656,8 +656,8 @@
         return;
       }
 
-      // Handle Enter key to execute selection
-      if (event.key === 'Enter' && zoomKeyboardInput.length > 0) {
+      // Handle Enter key or Ctrl+Shift+F to execute selection
+      if ((event.key === 'Enter' || (event.key === 'F' && event.ctrlKey && event.shiftKey)) && zoomKeyboardInput.length > 0) {
         const squareNumber = parseInt(zoomKeyboardInput);
         const totalSquares = document.querySelectorAll('.grid-square').length;
         

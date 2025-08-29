@@ -82,7 +82,7 @@ class ScreenGridApp {
       alwaysOnTop: true,
       skipTaskbar: true,
       resizable: false,
-      focusable: false,
+      focusable: true,
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -270,8 +270,13 @@ class ScreenGridApp {
       });
       
       this.overlayWindow.show();
-      this.overlayWindow.focus();
       this.isOverlayVisible = true;
+      
+      // Small delay to ensure window is fully shown before focusing
+      setTimeout(() => {
+        this.overlayWindow.focus();
+        console.log('📋 OVERLAY: Window focused for keyboard input');
+      }, 100);
     }
   }
 
@@ -331,9 +336,13 @@ class ScreenGridApp {
       console.log('📋 SHOW OVERLAY: Back to Grid button pressed');
       if (this.overlayWindow) {
         this.overlayWindow.show();
-        this.overlayWindow.focus();
         this.isOverlayVisible = true;
-        console.log('📋 SHOW OVERLAY: Overlay shown and focused');
+        
+        // Small delay to ensure window is fully shown before focusing
+        setTimeout(() => {
+          this.overlayWindow.focus();
+          console.log('📋 SHOW OVERLAY: Overlay shown and focused for keyboard input');
+        }, 100);
       }
     });
 
@@ -652,7 +661,7 @@ class ScreenGridApp {
         alwaysOnTop: true,
         skipTaskbar: true,
         resizable: false,
-        focusable: false,
+        focusable: true,
         webPreferences: {
           nodeIntegration: true,
           contextIsolation: false,
