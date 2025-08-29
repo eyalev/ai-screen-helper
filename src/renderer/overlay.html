@@ -26,11 +26,14 @@
       width: 100vw;
       height: 100vh;
       display: grid;
-      gap: 2px;
+      gap: 0;
+      border: 2px solid rgba(255, 255, 0, var(--grid-opacity));
     }
 
     .grid-cell {
-      border: 2px solid rgba(255, 255, 0, var(--grid-opacity));
+      border: none;
+      border-right: 2px solid rgba(255, 255, 0, var(--grid-opacity));
+      border-bottom: 2px solid rgba(255, 255, 0, var(--grid-opacity));
       background: rgba(255, 255, 0, calc(var(--grid-opacity) * 0.0625));
       display: flex;
       align-items: center;
@@ -39,6 +42,8 @@
       transition: all 0.2s ease;
       position: relative;
     }
+
+    /* Dynamic rules for removing borders will be added via JavaScript */
 
     .grid-cell:hover {
       background: rgba(255, 255, 0, calc(var(--grid-opacity) * 0.25));
@@ -163,6 +168,9 @@
       container.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`;
       container.style.gridTemplateRows = `repeat(${config.rows}, 1fr)`;
 
+      // Create dynamic CSS rules for border removal
+      updateGridBorderRules(config);
+
       const cellWidth = screenSize.width / config.cols;
       const cellHeight = screenSize.height / config.rows;
 
@@ -170,7 +178,19 @@
       for (let row = 0; row < config.rows; row++) {
         for (let col = 0; col < config.cols; col++) {
           const cell = document.createElement('div');
-          cell.className = 'grid-cell';
+          let cellClass = 'grid-cell';
+          
+          // Add class for bottom row cells
+          if (row === config.rows - 1) {
+            cellClass += ' bottom-row';
+          }
+          
+          // Add class for rightmost column cells
+          if (col === config.cols - 1) {
+            cellClass += ' right-column';
+          }
+          
+          cell.className = cellClass;
           
           const cellNumber = row * config.cols + col + 1;
           const x = Math.floor((screenSize.x || 0) + col * cellWidth);
@@ -198,6 +218,33 @@
           container.appendChild(cell);
         }
       }
+    }
+
+    function updateGridBorderRules(config) {
+      // Remove existing dynamic styles
+      const existingStyle = document.getElementById('dynamic-grid-styles');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+
+      // Create new style element
+      const style = document.createElement('style');
+      style.id = 'dynamic-grid-styles';
+      
+      // Generate CSS rules for removing borders
+      style.textContent = `
+        /* Remove right border from rightmost column */
+        .grid-cell.right-column {
+          border-right: none;
+        }
+
+        /* Remove bottom border from bottom row */
+        .grid-cell.bottom-row {
+          border-bottom: none;
+        }
+      `;
+
+      document.head.appendChild(style);
     }
 
     // Helper functions for keyboard input
