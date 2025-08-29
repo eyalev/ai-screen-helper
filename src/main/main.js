@@ -17,7 +17,8 @@ class ScreenGridApp {
       cols: 10,
       gridOpacity: 0.8, // Default opacity for grid elements (borders, numbers, backgrounds)
       zoomFactor: 3,
-      zoomPadding: 0.5 // Default padding as fraction of grid square size (0.5 = half grid square)
+      zoomPadding: 0.5, // Default padding as fraction of grid square size (0.5 = half grid square)
+      zoomGridSize: 30 // Size of each grid square in zoom window (pixels)
     };
     this.gridConfig = { ...this.defaultGridConfig };
   }

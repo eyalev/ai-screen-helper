@@ -292,6 +292,17 @@
       </div>
     </div>
 
+    <div class="setting-item">
+      <div class="setting-label">
+        <div class="name">Zoom Grid Size</div>
+        <div class="description">Size of each clickable square in zoom window (smaller = more precise)</div>
+      </div>
+      <div class="setting-control">
+        <input type="range" id="zoomGridSize" min="10" max="50" step="5" value="30">
+        <span class="current-value" id="zoomGridSizeValue">30px</span>
+      </div>
+    </div>
+
     <div class="zoom-explanation">
       <div class="title">What is Zoom Padding?</div>
       <div>
@@ -328,12 +339,14 @@
       gridOpacity: document.getElementById('gridOpacity'),
       zoomFactor: document.getElementById('zoomFactor'),
       zoomPadding: document.getElementById('zoomPadding'),
+      zoomGridSize: document.getElementById('zoomGridSize'),
       
       rowsValue: document.getElementById('rowsValue'),
       colsValue: document.getElementById('colsValue'),
       gridOpacityValue: document.getElementById('gridOpacityValue'),
       zoomFactorValue: document.getElementById('zoomFactorValue'),
       zoomPaddingValue: document.getElementById('zoomPaddingValue'),
+      zoomGridSizeValue: document.getElementById('zoomGridSizeValue'),
       
       gridPreview: document.getElementById('gridPreview'),
       zoomPreview: document.getElementById('zoomPreview'),
@@ -350,9 +363,10 @@
       const gridOpacity = parseFloat(elements.gridOpacity.value);
       const zoomFactor = parseInt(elements.zoomFactor.value);
       const zoomPadding = parseFloat(elements.zoomPadding.value);
+      const zoomGridSize = parseInt(elements.zoomGridSize.value);
       
       elements.gridPreview.textContent = `${rows} rows × ${cols} columns = ${rows * cols} total cells`;
-      elements.zoomPreview.textContent = `${zoomFactor}x magnification with ${zoomPadding} cell padding`;
+      elements.zoomPreview.textContent = `${zoomFactor}x magnification with ${zoomPadding} cell padding, ${zoomGridSize}px squares`;
       
       // Update value displays
       elements.rowsValue.textContent = rows;
@@ -360,6 +374,7 @@
       elements.gridOpacityValue.textContent = `${Math.round(gridOpacity * 100)}%`;
       elements.zoomFactorValue.textContent = `${zoomFactor}x`;
       elements.zoomPaddingValue.textContent = zoomPadding.toFixed(1);
+      elements.zoomGridSizeValue.textContent = `${zoomGridSize}px`;
     }
 
     function loadSettings(settings) {
@@ -370,6 +385,7 @@
       elements.gridOpacity.value = settings.gridOpacity || 0.8;
       elements.zoomFactor.value = settings.zoomFactor;
       elements.zoomPadding.value = settings.zoomPadding;
+      elements.zoomGridSize.value = settings.zoomGridSize || 30;
       
       updatePreviews();
     }
@@ -380,7 +396,8 @@
         cols: parseInt(elements.cols.value),
         gridOpacity: parseFloat(elements.gridOpacity.value),
         zoomFactor: parseInt(elements.zoomFactor.value),
-        zoomPadding: parseFloat(elements.zoomPadding.value)
+        zoomPadding: parseFloat(elements.zoomPadding.value),
+        zoomGridSize: parseInt(elements.zoomGridSize.value)
       };
       
       ipcRenderer.send('save-settings', newSettings);
@@ -400,7 +417,7 @@
     }
 
     // Event listeners for real-time updates
-    ['rows', 'cols', 'gridOpacity', 'zoomFactor', 'zoomPadding'].forEach(id => {
+    ['rows', 'cols', 'gridOpacity', 'zoomFactor', 'zoomPadding', 'zoomGridSize'].forEach(id => {
       elements[id].addEventListener('input', updatePreviews);
     });
 

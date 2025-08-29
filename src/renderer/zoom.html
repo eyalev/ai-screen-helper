@@ -334,7 +334,9 @@
       const gridSquareContainer = document.getElementById('gridSquareContainer');
       gridSquareContainer.innerHTML = '';
       
-      const gridSize = 30; // 30x30 pixel grid for better visibility
+      // Use configurable grid size from settings
+      const gridSize = currentConfig.zoomGridSize || 30;
+      console.log(`🔧 GRID: Using grid size: ${gridSize}px`);
       const canvasRect = canvas.getBoundingClientRect();
       const bounds = window.zoomAreaBounds;
       
