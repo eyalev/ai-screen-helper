@@ -196,10 +196,14 @@
           const x = Math.floor((screenSize.x || 0) + col * cellWidth);
           const y = Math.floor((screenSize.y || 0) + row * cellHeight);
           
-          cell.innerHTML = `
-            <span class="cell-number">${cellNumber}</span>
-            <span class="cell-coords">(${x}, ${y})</span>
-          `;
+          let cellHtml = `<span class="cell-number">${cellNumber}</span>`;
+          
+          // Only show coordinates if enabled in settings
+          if (config.showCoordinates) {
+            cellHtml += `<span class="cell-coords">(${x}, ${y})</span>`;
+          }
+          
+          cell.innerHTML = cellHtml;
 
           cell.addEventListener('click', () => {
             const cellData = {

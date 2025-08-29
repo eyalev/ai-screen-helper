@@ -261,6 +261,17 @@
       </div>
     </div>
 
+    <div class="setting-item">
+      <div class="setting-label">
+        <div class="name">Show Coordinates</div>
+        <div class="description">Display (x, y) coordinates in grid squares</div>
+      </div>
+      <div class="setting-control">
+        <input type="checkbox" id="showCoordinates" style="margin: 0;">
+        <span class="current-value" id="showCoordinatesValue">Off</span>
+      </div>
+    </div>
+
     <div class="preview">
       <div class="title">Grid Preview</div>
       <span id="gridPreview">6 rows × 10 columns = 60 total cells</span>
@@ -337,6 +348,7 @@
       rows: document.getElementById('rows'),
       cols: document.getElementById('cols'),
       gridOpacity: document.getElementById('gridOpacity'),
+      showCoordinates: document.getElementById('showCoordinates'),
       zoomFactor: document.getElementById('zoomFactor'),
       zoomPadding: document.getElementById('zoomPadding'),
       zoomGridSize: document.getElementById('zoomGridSize'),
@@ -344,6 +356,7 @@
       rowsValue: document.getElementById('rowsValue'),
       colsValue: document.getElementById('colsValue'),
       gridOpacityValue: document.getElementById('gridOpacityValue'),
+      showCoordinatesValue: document.getElementById('showCoordinatesValue'),
       zoomFactorValue: document.getElementById('zoomFactorValue'),
       zoomPaddingValue: document.getElementById('zoomPaddingValue'),
       zoomGridSizeValue: document.getElementById('zoomGridSizeValue'),
@@ -361,6 +374,7 @@
       const rows = parseInt(elements.rows.value);
       const cols = parseInt(elements.cols.value);
       const gridOpacity = parseFloat(elements.gridOpacity.value);
+      const showCoordinates = elements.showCoordinates.checked;
       const zoomFactor = parseInt(elements.zoomFactor.value);
       const zoomPadding = parseFloat(elements.zoomPadding.value);
       const zoomGridSize = parseInt(elements.zoomGridSize.value);
@@ -372,6 +386,7 @@
       elements.rowsValue.textContent = rows;
       elements.colsValue.textContent = cols;
       elements.gridOpacityValue.textContent = `${Math.round(gridOpacity * 100)}%`;
+      elements.showCoordinatesValue.textContent = showCoordinates ? 'On' : 'Off';
       elements.zoomFactorValue.textContent = `${zoomFactor}x`;
       elements.zoomPaddingValue.textContent = zoomPadding.toFixed(1);
       elements.zoomGridSizeValue.textContent = `${zoomGridSize}px`;
@@ -383,6 +398,7 @@
       elements.rows.value = settings.rows;
       elements.cols.value = settings.cols;
       elements.gridOpacity.value = settings.gridOpacity || 0.8;
+      elements.showCoordinates.checked = settings.showCoordinates !== undefined ? settings.showCoordinates : false;
       elements.zoomFactor.value = settings.zoomFactor;
       elements.zoomPadding.value = settings.zoomPadding;
       elements.zoomGridSize.value = settings.zoomGridSize || 30;
@@ -395,6 +411,7 @@
         rows: parseInt(elements.rows.value),
         cols: parseInt(elements.cols.value),
         gridOpacity: parseFloat(elements.gridOpacity.value),
+        showCoordinates: elements.showCoordinates.checked,
         zoomFactor: parseInt(elements.zoomFactor.value),
         zoomPadding: parseFloat(elements.zoomPadding.value),
         zoomGridSize: parseInt(elements.zoomGridSize.value)
@@ -420,6 +437,9 @@
     ['rows', 'cols', 'gridOpacity', 'zoomFactor', 'zoomPadding', 'zoomGridSize'].forEach(id => {
       elements[id].addEventListener('input', updatePreviews);
     });
+    
+    // Special handling for checkbox
+    elements.showCoordinates.addEventListener('change', updatePreviews);
 
     // Button event listeners
     elements.saveBtn.addEventListener('click', saveSettings);
