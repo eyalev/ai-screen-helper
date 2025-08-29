@@ -196,7 +196,9 @@
           const x = Math.floor((screenSize.x || 0) + col * cellWidth);
           const y = Math.floor((screenSize.y || 0) + row * cellHeight);
           
-          let cellHtml = `<span class="cell-number">${cellNumber}</span>`;
+          // Apply prefix and suffix to cell number
+          const displayNumber = `${config.numberPrefix || ''}${cellNumber}${config.numberSuffix || ''}`;
+          let cellHtml = `<span class="cell-number">${displayNumber}</span>`;
           
           // Only show coordinates if enabled in settings
           if (config.showCoordinates) {

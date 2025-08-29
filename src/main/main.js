@@ -17,6 +17,8 @@ class ScreenGridApp {
       cols: 10,
       gridOpacity: 0.8, // Default opacity for grid elements (borders, numbers, backgrounds)
       showCoordinates: false, // Show coordinates in grid squares by default
+      numberPrefix: '', // Text to display before grid numbers (e.g., "[")
+      numberSuffix: '', // Text to display after grid numbers (e.g., "]")
       zoomFactor: 3,
       zoomPadding: 0.5, // Default padding as fraction of grid square size (0.5 = half grid square)
       zoomGridSize: 30 // Size of each grid square in zoom window (pixels)

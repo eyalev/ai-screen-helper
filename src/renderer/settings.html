@@ -272,6 +272,28 @@
       </div>
     </div>
 
+    <div class="setting-item">
+      <div class="setting-label">
+        <div class="name">Number Prefix</div>
+        <div class="description">Text to display before grid numbers (e.g., "[" for "[1]")</div>
+      </div>
+      <div class="setting-control">
+        <input type="text" id="numberPrefix" maxlength="3" placeholder="" style="width: 60px; text-align: center;">
+        <span class="current-value" id="numberPrefixValue">None</span>
+      </div>
+    </div>
+
+    <div class="setting-item">
+      <div class="setting-label">
+        <div class="name">Number Suffix</div>
+        <div class="description">Text to display after grid numbers (e.g., "]" for "[1]")</div>
+      </div>
+      <div class="setting-control">
+        <input type="text" id="numberSuffix" maxlength="3" placeholder="" style="width: 60px; text-align: center;">
+        <span class="current-value" id="numberSuffixValue">None</span>
+      </div>
+    </div>
+
     <div class="preview">
       <div class="title">Grid Preview</div>
       <span id="gridPreview">6 rows × 10 columns = 60 total cells</span>
@@ -349,6 +371,8 @@
       cols: document.getElementById('cols'),
       gridOpacity: document.getElementById('gridOpacity'),
       showCoordinates: document.getElementById('showCoordinates'),
+      numberPrefix: document.getElementById('numberPrefix'),
+      numberSuffix: document.getElementById('numberSuffix'),
       zoomFactor: document.getElementById('zoomFactor'),
       zoomPadding: document.getElementById('zoomPadding'),
       zoomGridSize: document.getElementById('zoomGridSize'),
@@ -357,6 +381,8 @@
       colsValue: document.getElementById('colsValue'),
       gridOpacityValue: document.getElementById('gridOpacityValue'),
       showCoordinatesValue: document.getElementById('showCoordinatesValue'),
+      numberPrefixValue: document.getElementById('numberPrefixValue'),
+      numberSuffixValue: document.getElementById('numberSuffixValue'),
       zoomFactorValue: document.getElementById('zoomFactorValue'),
       zoomPaddingValue: document.getElementById('zoomPaddingValue'),
       zoomGridSizeValue: document.getElementById('zoomGridSizeValue'),
@@ -375,11 +401,15 @@
       const cols = parseInt(elements.cols.value);
       const gridOpacity = parseFloat(elements.gridOpacity.value);
       const showCoordinates = elements.showCoordinates.checked;
+      const numberPrefix = elements.numberPrefix.value;
+      const numberSuffix = elements.numberSuffix.value;
       const zoomFactor = parseInt(elements.zoomFactor.value);
       const zoomPadding = parseFloat(elements.zoomPadding.value);
       const zoomGridSize = parseInt(elements.zoomGridSize.value);
       
-      elements.gridPreview.textContent = `${rows} rows × ${cols} columns = ${rows * cols} total cells`;
+      // Show example with prefix/suffix
+      const exampleNumber = `${numberPrefix}1${numberSuffix}`;
+      elements.gridPreview.textContent = `${rows} rows × ${cols} columns = ${rows * cols} total cells (e.g., "${exampleNumber}")`;
       elements.zoomPreview.textContent = `${zoomFactor}x magnification with ${zoomPadding} cell padding, ${zoomGridSize}px squares`;
       
       // Update value displays
@@ -387,6 +417,8 @@
       elements.colsValue.textContent = cols;
       elements.gridOpacityValue.textContent = `${Math.round(gridOpacity * 100)}%`;
       elements.showCoordinatesValue.textContent = showCoordinates ? 'On' : 'Off';
+      elements.numberPrefixValue.textContent = numberPrefix || 'None';
+      elements.numberSuffixValue.textContent = numberSuffix || 'None';
       elements.zoomFactorValue.textContent = `${zoomFactor}x`;
       elements.zoomPaddingValue.textContent = zoomPadding.toFixed(1);
       elements.zoomGridSizeValue.textContent = `${zoomGridSize}px`;
@@ -399,6 +431,8 @@
       elements.cols.value = settings.cols;
       elements.gridOpacity.value = settings.gridOpacity || 0.8;
       elements.showCoordinates.checked = settings.showCoordinates !== undefined ? settings.showCoordinates : false;
+      elements.numberPrefix.value = settings.numberPrefix || '';
+      elements.numberSuffix.value = settings.numberSuffix || '';
       elements.zoomFactor.value = settings.zoomFactor;
       elements.zoomPadding.value = settings.zoomPadding;
       elements.zoomGridSize.value = settings.zoomGridSize || 30;
@@ -412,6 +446,8 @@
         cols: parseInt(elements.cols.value),
         gridOpacity: parseFloat(elements.gridOpacity.value),
         showCoordinates: elements.showCoordinates.checked,
+        numberPrefix: elements.numberPrefix.value,
+        numberSuffix: elements.numberSuffix.value,
         zoomFactor: parseInt(elements.zoomFactor.value),
         zoomPadding: parseFloat(elements.zoomPadding.value),
         zoomGridSize: parseInt(elements.zoomGridSize.value)
@@ -434,7 +470,7 @@
     }
 
     // Event listeners for real-time updates
-    ['rows', 'cols', 'gridOpacity', 'zoomFactor', 'zoomPadding', 'zoomGridSize'].forEach(id => {
+    ['rows', 'cols', 'gridOpacity', 'numberPrefix', 'numberSuffix', 'zoomFactor', 'zoomPadding', 'zoomGridSize'].forEach(id => {
       elements[id].addEventListener('input', updatePreviews);
     });
     

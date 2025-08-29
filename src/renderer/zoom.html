@@ -406,9 +406,10 @@
           square.setAttribute('data-grid', `${col},${row}`);
           square.setAttribute('data-number', gridSquareNumber);
           
-          // Add visible number centered in the square
+          // Add visible number centered in the square with prefix/suffix
           const numberSpan = document.createElement('span');
-          numberSpan.textContent = gridSquareNumber;
+          const displayNumber = `${currentConfig.numberPrefix || ''}${gridSquareNumber}${currentConfig.numberSuffix || ''}`;
+          numberSpan.textContent = displayNumber;
           numberSpan.style.cssText = `
             position: absolute;
             top: 50%;
