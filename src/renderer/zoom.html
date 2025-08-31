@@ -735,6 +735,18 @@
       setupZoomView(data);
     });
 
+    // Listen for global key presses from main process
+    ipcRenderer.on('global-key-press', (event, data) => {
+      const keyEvent = new KeyboardEvent('keydown', {
+        key: data.key,
+        code: data.key === 'Enter' ? 'Enter' : data.key === 'Backspace' ? 'Backspace' : `Digit${data.key}`,
+        keyCode: data.key === 'Enter' ? 13 : data.key === 'Backspace' ? 8 : 48 + parseInt(data.key)
+      });
+      
+      // Dispatch the synthetic keyboard event
+      document.dispatchEvent(keyEvent);
+    });
+
     // Handle debug mode checkbox
     document.getElementById('debugMode').addEventListener('change', (event) => {
       const debugIndicator = document.getElementById('debugIndicator');

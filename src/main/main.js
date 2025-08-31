@@ -291,6 +291,7 @@ class ScreenGridApp {
       // Hide the overlay when opening zoom window
       if (this.overlayWindow) {
         this.overlayWindow.hide();
+        this.isOverlayVisible = false; // Update flag so global shortcuts route to zoom window
       }
       
       if (!this.zoomWindow) {
@@ -647,11 +648,13 @@ class ScreenGridApp {
       }
     });
 
-    // Register number keys for grid input when overlay is visible
+    // Register number keys for grid input when overlay or zoom window is visible
     for (let i = 0; i <= 9; i++) {
       globalShortcut.register(`${i}`, () => {
         if (this.isOverlayVisible && this.overlayWindow) {
           this.overlayWindow.webContents.send('global-key-press', { key: i.toString() });
+        } else if (this.zoomWindow && this.zoomWindow.isVisible()) {
+          this.zoomWindow.webContents.send('global-key-press', { key: i.toString() });
         }
       });
     }
@@ -660,12 +663,16 @@ class ScreenGridApp {
     globalShortcut.register('Return', () => {
       if (this.isOverlayVisible && this.overlayWindow) {
         this.overlayWindow.webContents.send('global-key-press', { key: 'Enter' });
+      } else if (this.zoomWindow && this.zoomWindow.isVisible()) {
+        this.zoomWindow.webContents.send('global-key-press', { key: 'Enter' });
       }
     });
 
     globalShortcut.register('BackSpace', () => {
       if (this.isOverlayVisible && this.overlayWindow) {
         this.overlayWindow.webContents.send('global-key-press', { key: 'Backspace' });
+      } else if (this.zoomWindow && this.zoomWindow.isVisible()) {
+        this.zoomWindow.webContents.send('global-key-press', { key: 'Backspace' });
       }
     });
   }
