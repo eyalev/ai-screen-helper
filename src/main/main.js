@@ -301,6 +301,7 @@ class ScreenGridApp {
       });
 
       this.zoomWindow.show();
+      this.zoomWindow.maximize(); // Ensure maximized on Linux
       this.zoomWindow.focus();
     });
 
