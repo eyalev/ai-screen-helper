@@ -108,15 +108,13 @@ class ScreenGridApp {
       alwaysOnTop: true,
       resizable: true,
       show: false,
+      maximized: true,
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
         enableRemoteModule: true
       }
     });
-
-    // Maximize the window but don't scale content
-    this.zoomWindow.maximize();
 
     this.zoomWindow.loadFile(path.join(__dirname, '../renderer/zoom.html'));
 
