@@ -82,7 +82,7 @@ class ScreenGridApp {
       alwaysOnTop: true,
       skipTaskbar: true,
       resizable: false,
-      focusable: true,
+      focusable: false,
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -272,7 +272,13 @@ class ScreenGridApp {
       
       // Small delay to ensure window is fully shown before focusing
       setTimeout(() => {
+        // Force focus even with focusable: false for keyboard input
+        this.overlayWindow.setFocusable(true);
         this.overlayWindow.focus();
+        // Set back to non-focusable after a brief moment to prevent UI interference
+        setTimeout(() => {
+          this.overlayWindow.setFocusable(false);
+        }, 100);
         console.log('📋 OVERLAY: Window focused for keyboard input');
       }, 100);
     }
@@ -638,6 +644,28 @@ class ScreenGridApp {
         if (this.zoomWindow) {
           this.zoomWindow.hide();
         }
+      }
+    });
+
+    // Register number keys for grid input when overlay is visible
+    for (let i = 0; i <= 9; i++) {
+      globalShortcut.register(`${i}`, () => {
+        if (this.isOverlayVisible && this.overlayWindow) {
+          this.overlayWindow.webContents.send('global-key-press', { key: i.toString() });
+        }
+      });
+    }
+
+    // Register Enter and Backspace for grid navigation
+    globalShortcut.register('Return', () => {
+      if (this.isOverlayVisible && this.overlayWindow) {
+        this.overlayWindow.webContents.send('global-key-press', { key: 'Enter' });
+      }
+    });
+
+    globalShortcut.register('BackSpace', () => {
+      if (this.isOverlayVisible && this.overlayWindow) {
+        this.overlayWindow.webContents.send('global-key-press', { key: 'Backspace' });
       }
     });
   }
