@@ -103,8 +103,6 @@ class ScreenGridApp {
 
   async createZoomWindow() {
     this.zoomWindow = new BrowserWindow({
-      width: 800,
-      height: 800,
       frame: true,
       transparent: false,
       alwaysOnTop: true,
@@ -116,6 +114,9 @@ class ScreenGridApp {
         enableRemoteModule: true
       }
     });
+
+    // Maximize the window but don't scale content
+    this.zoomWindow.maximize();
 
     this.zoomWindow.loadFile(path.join(__dirname, '../renderer/zoom.html'));
 
