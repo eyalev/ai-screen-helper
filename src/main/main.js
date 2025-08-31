@@ -105,10 +105,9 @@ class ScreenGridApp {
     this.zoomWindow = new BrowserWindow({
       frame: true,
       transparent: false,
-      alwaysOnTop: true,
+      alwaysOnTop: false, // Temporarily disable to allow maximization
       resizable: true,
       show: false,
-      maximized: true,
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -301,8 +300,15 @@ class ScreenGridApp {
       });
 
       this.zoomWindow.show();
-      this.zoomWindow.maximize(); // Ensure maximized on Linux
-      this.zoomWindow.focus();
+      
+      // Maximize the window after a brief delay, then set alwaysOnTop
+      setTimeout(() => {
+        this.zoomWindow.maximize();
+        setTimeout(() => {
+          this.zoomWindow.setAlwaysOnTop(true); // Set alwaysOnTop after maximization
+          this.zoomWindow.focus();
+        }, 100);
+      }, 50);
     });
 
     ipcMain.on('coordinate-selected', (event, data) => {
