@@ -336,6 +336,32 @@
       </div>
     </div>
 
+    <div class="setting-item">
+      <div class="setting-label">
+        <div class="name">Zoom Window Opacity</div>
+        <div class="description">Visual opacity of zoom window elements (separate from main grid)</div>
+      </div>
+      <div class="setting-control">
+        <input type="range" id="zoomOpacity" min="0.1" max="1.0" step="0.1" value="0.8">
+        <span class="current-value" id="zoomOpacityValue">0.8</span>
+      </div>
+    </div>
+
+    <div class="setting-item">
+      <div class="setting-label">
+        <div class="name">Zoom Number Layout</div>
+        <div class="description">How many numbers to display per square in zoom window</div>
+      </div>
+      <div class="setting-control">
+        <select id="zoomNumberLayout" style="padding: 4px 8px; background: #2a2a2a; color: #00ffff; border: 1px solid rgba(0,255,255,0.3); border-radius: 4px;">
+          <option value="center">Center Only (1 number)</option>
+          <option value="two-corners">Two Corners Only (2 numbers)</option>
+          <option value="all-corners">All Corners + Center (5 numbers)</option>
+        </select>
+        <span class="current-value" id="zoomNumberLayoutValue">All Corners + Center</span>
+      </div>
+    </div>
+
     <div class="zoom-explanation">
       <div class="title">What is Zoom Padding?</div>
       <div>
@@ -376,6 +402,8 @@
       zoomFactor: document.getElementById('zoomFactor'),
       zoomPadding: document.getElementById('zoomPadding'),
       zoomGridSize: document.getElementById('zoomGridSize'),
+      zoomOpacity: document.getElementById('zoomOpacity'),
+      zoomNumberLayout: document.getElementById('zoomNumberLayout'),
       
       rowsValue: document.getElementById('rowsValue'),
       colsValue: document.getElementById('colsValue'),
@@ -386,6 +414,8 @@
       zoomFactorValue: document.getElementById('zoomFactorValue'),
       zoomPaddingValue: document.getElementById('zoomPaddingValue'),
       zoomGridSizeValue: document.getElementById('zoomGridSizeValue'),
+      zoomOpacityValue: document.getElementById('zoomOpacityValue'),
+      zoomNumberLayoutValue: document.getElementById('zoomNumberLayoutValue'),
       
       gridPreview: document.getElementById('gridPreview'),
       zoomPreview: document.getElementById('zoomPreview'),
@@ -406,11 +436,19 @@
       const zoomFactor = parseInt(elements.zoomFactor.value);
       const zoomPadding = parseFloat(elements.zoomPadding.value);
       const zoomGridSize = parseInt(elements.zoomGridSize.value);
+      const zoomOpacity = parseFloat(elements.zoomOpacity.value);
+      const zoomNumberLayout = elements.zoomNumberLayout.value;
       
       // Show example with prefix/suffix
       const exampleNumber = `${numberPrefix}1${numberSuffix}`;
       elements.gridPreview.textContent = `${rows} rows × ${cols} columns = ${rows * cols} total cells (e.g., "${exampleNumber}")`;
-      elements.zoomPreview.textContent = `${zoomFactor}x magnification with ${zoomPadding} cell padding, ${zoomGridSize}px squares`;
+      
+      const layoutText = {
+        'center': 'center only (1 number)',
+        'two-corners': 'two corners only (2 numbers)', 
+        'all-corners': 'all corners + center (5 numbers)'
+      }[zoomNumberLayout];
+      elements.zoomPreview.textContent = `${zoomFactor}x magnification with ${zoomPadding} cell padding, ${zoomGridSize}px squares, ${layoutText}`;
       
       // Update value displays
       elements.rowsValue.textContent = rows;
@@ -422,6 +460,13 @@
       elements.zoomFactorValue.textContent = `${zoomFactor}x`;
       elements.zoomPaddingValue.textContent = zoomPadding.toFixed(1);
       elements.zoomGridSizeValue.textContent = `${zoomGridSize}px`;
+      elements.zoomOpacityValue.textContent = `${Math.round(zoomOpacity * 100)}%`;
+      const layoutLabels = {
+        'center': 'Center Only (1)',
+        'two-corners': 'Two Corners (2)',
+        'all-corners': 'All Corners + Center (5)'
+      };
+      elements.zoomNumberLayoutValue.textContent = layoutLabels[zoomNumberLayout] || 'All Corners + Center';
     }
 
     function loadSettings(settings) {
@@ -436,6 +481,14 @@
       elements.zoomFactor.value = settings.zoomFactor;
       elements.zoomPadding.value = settings.zoomPadding;
       elements.zoomGridSize.value = settings.zoomGridSize || 30;
+      elements.zoomOpacity.value = settings.zoomOpacity || 0.8;
+      
+      // Handle backwards compatibility with old showZoomCornerNumbers setting
+      let layoutValue = settings.zoomNumberLayout || 'all-corners';
+      if (!settings.zoomNumberLayout && settings.showZoomCornerNumbers !== undefined) {
+        layoutValue = settings.showZoomCornerNumbers ? 'all-corners' : 'center';
+      }
+      elements.zoomNumberLayout.value = layoutValue;
       
       updatePreviews();
     }
@@ -450,7 +503,9 @@
         numberSuffix: elements.numberSuffix.value,
         zoomFactor: parseInt(elements.zoomFactor.value),
         zoomPadding: parseFloat(elements.zoomPadding.value),
-        zoomGridSize: parseInt(elements.zoomGridSize.value)
+        zoomGridSize: parseInt(elements.zoomGridSize.value),
+        zoomOpacity: parseFloat(elements.zoomOpacity.value),
+        zoomNumberLayout: elements.zoomNumberLayout.value
       };
       
       ipcRenderer.send('save-settings', newSettings);
@@ -470,12 +525,13 @@
     }
 
     // Event listeners for real-time updates
-    ['rows', 'cols', 'gridOpacity', 'numberPrefix', 'numberSuffix', 'zoomFactor', 'zoomPadding', 'zoomGridSize'].forEach(id => {
+    ['rows', 'cols', 'gridOpacity', 'numberPrefix', 'numberSuffix', 'zoomFactor', 'zoomPadding', 'zoomGridSize', 'zoomOpacity'].forEach(id => {
       elements[id].addEventListener('input', updatePreviews);
     });
     
-    // Special handling for checkbox
+    // Special handling for checkboxes and dropdowns
     elements.showCoordinates.addEventListener('change', updatePreviews);
+    elements.zoomNumberLayout.addEventListener('change', updatePreviews);
 
     // Button event listeners
     elements.saveBtn.addEventListener('click', saveSettings);

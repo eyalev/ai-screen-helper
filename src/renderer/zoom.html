@@ -90,7 +90,7 @@
 
     .grid-square {
       position: absolute;
-      border: 2px solid rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.75));
+      border: 1px solid rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.75));
       background: rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.1875));
       cursor: pointer;
       transition: all 0.2s ease;
@@ -414,26 +414,92 @@
           square.setAttribute('data-grid', `${col},${row}`);
           square.setAttribute('data-number', gridSquareNumber);
           
-          // Add visible number centered in the square with prefix/suffix
-          const numberSpan = document.createElement('span');
+          // Determine layout first
+          let layout = currentConfig.zoomNumberLayout || 'all-corners';
+          
+          // Handle backwards compatibility with old showZoomCornerNumbers boolean
+          if (!currentConfig.zoomNumberLayout && currentConfig.showZoomCornerNumbers !== undefined) {
+            layout = currentConfig.showZoomCornerNumbers ? 'all-corners' : 'center';
+          }
+          
           const displayNumber = `${currentConfig.numberPrefix || ''}${gridSquareNumber}${currentConfig.numberSuffix || ''}`;
-          numberSpan.textContent = displayNumber;
-          numberSpan.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: rgba(255, 255, 0, var(--zoom-opacity));
-            font-size: 12px;
-            font-weight: bold;
-            pointer-events: none;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, calc(var(--zoom-opacity) * 1.25));
-            background: rgba(0, 0, 0, calc(var(--zoom-opacity) * 0.6));
-            padding: 1px 3px;
-            border-radius: 2px;
-            border: 1px solid rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.5));
-          `;
-          square.appendChild(numberSpan);
+          
+          // Add center number only for 'center' and 'all-corners' layouts
+          if (layout === 'center' || layout === 'all-corners') {
+            const numberSpan = document.createElement('span');
+            numberSpan.textContent = displayNumber;
+            numberSpan.style.cssText = `
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              color: rgba(255, 255, 0, var(--zoom-opacity));
+              font-size: 10px;
+              font-weight: bold;
+              pointer-events: none;
+              text-shadow: 1px 1px 2px rgba(0, 0, 0, calc(var(--zoom-opacity) * 1.25));
+              background: rgba(0, 0, 0, calc(var(--zoom-opacity) * 0.6));
+              padding: 1px 3px;
+              border-radius: 2px;
+              border: 1px solid rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.5));
+            `;
+            square.appendChild(numberSpan);
+          }
+          
+          if (layout === 'all-corners') {
+            // Show all 4 corners + center (5 total)
+            const corners = [
+              { position: 'top: 2px; left: 2px;' }, // top-left
+              { position: 'top: 2px; right: 2px;' }, // top-right
+              { position: 'bottom: 2px; left: 2px;' }, // bottom-left
+              { position: 'bottom: 2px; right: 2px;' } // bottom-right
+            ];
+            
+            corners.forEach((corner) => {
+              const cornerSpan = document.createElement('span');
+              cornerSpan.textContent = displayNumber;
+              cornerSpan.style.cssText = `
+                position: absolute;
+                ${corner.position}
+                font-size: 8px;
+                font-weight: bold;
+                color: rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.8));
+                text-shadow: 1px 1px 2px rgba(0, 0, 0, calc(var(--zoom-opacity) * 1.25));
+                background: rgba(0, 0, 0, calc(var(--zoom-opacity) * 0.7));
+                padding: 0px 2px;
+                border-radius: 2px;
+                border: 1px solid rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.3));
+                pointer-events: none;
+              `;
+              square.appendChild(cornerSpan);
+            });
+          } else if (layout === 'two-corners') {
+            // Show only upper-left and bottom-right corners (2 + center = 3 total)
+            const corners = [
+              { position: 'top: 2px; left: 2px;' }, // top-left
+              { position: 'bottom: 2px; right: 2px;' } // bottom-right
+            ];
+            
+            corners.forEach((corner) => {
+              const cornerSpan = document.createElement('span');
+              cornerSpan.textContent = displayNumber;
+              cornerSpan.style.cssText = `
+                position: absolute;
+                ${corner.position}
+                font-size: 8px;
+                font-weight: bold;
+                color: rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.8));
+                text-shadow: 1px 1px 2px rgba(0, 0, 0, calc(var(--zoom-opacity) * 1.25));
+                background: rgba(0, 0, 0, calc(var(--zoom-opacity) * 0.7));
+                padding: 0px 2px;
+                border-radius: 2px;
+                border: 1px solid rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.3));
+                pointer-events: none;
+              `;
+              square.appendChild(cornerSpan);
+            });
+          }
+          // If layout === 'center', only the center number is shown (no additional corners)
           
           square.addEventListener('click', (event) => {
             console.log(`🎯 GRID SQUARE CLICKED: ${gridSquareNumber} (${col},${row}) -> (${centerX},${centerY})`);
@@ -727,8 +793,11 @@
 
     // Handle zoom data from main process
     ipcRenderer.on('show-zoom', (event, data) => {
-      // Apply zoom opacity CSS variable if provided
-      if (data.config && data.config.gridOpacity !== undefined) {
+      // Apply zoom opacity CSS variable if provided, using separate zoomOpacity setting
+      if (data.config && data.config.zoomOpacity !== undefined) {
+        document.body.style.setProperty('--zoom-opacity', data.config.zoomOpacity);
+      } else if (data.config && data.config.gridOpacity !== undefined) {
+        // Fallback to gridOpacity for backwards compatibility
         document.body.style.setProperty('--zoom-opacity', data.config.gridOpacity);
       }
       

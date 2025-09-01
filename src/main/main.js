@@ -21,7 +21,9 @@ class ScreenGridApp {
       numberSuffix: '', // Text to display after grid numbers (e.g., "]")
       zoomFactor: 3,
       zoomPadding: 0.5, // Default padding as fraction of grid square size (0.5 = half grid square)
-      zoomGridSize: 30 // Size of each grid square in zoom window (pixels)
+      zoomGridSize: 30, // Size of each grid square in zoom window (pixels)
+      zoomNumberLayout: 'corners', // Layout for zoom window numbers: 'center', 'all-corners', 'two-corners'
+      zoomOpacity: 0.8 // Separate opacity for zoom window elements
     };
     this.gridConfig = { ...this.defaultGridConfig };
   }
