@@ -170,12 +170,14 @@
   
   <div class="header-info">
     <div>AI Screen Helper - Grid Overlay</div>
-    <div>Click a numbered square or type number + Enter (or Ctrl+Shift+F) to zoom in</div>
+    <div>Click a numbered square or type Ctrl+Shift+number + Ctrl+Shift+Enter to zoom in</div>
   </div>
 
   <div class="controls">
     <div>Ctrl+Shift+G: Toggle</div>
-    <div>Escape: Hide</div>
+    <div>Ctrl+Shift+X: Hide</div>
+    <div>Numbers: Ctrl+Shift+0-9</div>
+    <div>Displays: Ctrl+Alt+Shift+1/2</div>
   </div>
 
   <div class="grid-container" id="gridContainer">
@@ -396,7 +398,8 @@
 
     // Handle keyboard shortcuts
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
+      // Handle Ctrl+Shift+X to hide overlay (keeping Escape for backwards compatibility)
+      if (event.key === 'Escape' || (event.key === 'X' && event.ctrlKey && event.shiftKey)) {
         keyboardInput = '';
         ipcRenderer.send('hide-overlay');
         return;
@@ -424,8 +427,8 @@
         return;
       }
 
-      // Handle Enter key or Ctrl+Shift+F to execute selection
-      if ((event.key === 'Enter' || (event.key === 'F' && event.ctrlKey && event.shiftKey)) && keyboardInput.length > 0) {
+      // Handle Enter key or Ctrl+Shift+Enter to execute selection
+      if ((event.key === 'Enter') && keyboardInput.length > 0) {
         const cellNumber = parseInt(keyboardInput);
         if (cellNumber >= 1 && cellNumber <= (gridConfig.rows * gridConfig.cols)) {
           selectGridCellByNumber(cellNumber);

@@ -256,6 +256,9 @@ class ScreenGridApp {
         this.zoomWindow.hide();
       }
       this.isOverlayVisible = false;
+      
+      // Unregister grid shortcuts when hiding overlay
+      this.unregisterGridShortcuts();
     } else {
       // Capture screen before showing overlay
       await this.captureScreen();
@@ -269,6 +272,9 @@ class ScreenGridApp {
       
       this.overlayWindow.show();
       this.isOverlayVisible = true;
+      
+      // Register grid shortcuts when showing overlay
+      this.registerGridShortcuts();
       
       // Small delay to ensure window is fully shown before focusing
       setTimeout(() => {
@@ -292,6 +298,7 @@ class ScreenGridApp {
       if (this.overlayWindow) {
         this.overlayWindow.hide();
         this.isOverlayVisible = false; // Update flag so global shortcuts route to zoom window
+        // Keep grid shortcuts registered for zoom window
       }
       
       if (!this.zoomWindow) {
@@ -343,6 +350,9 @@ class ScreenGridApp {
       if (this.zoomWindow) {
         this.zoomWindow.hide();
       }
+      
+      // Unregister grid shortcuts when both windows are hidden
+      this.unregisterGridShortcuts();
     });
 
     ipcMain.on('show-overlay-again', () => {
@@ -350,6 +360,9 @@ class ScreenGridApp {
       if (this.overlayWindow) {
         this.overlayWindow.show();
         this.isOverlayVisible = true;
+        
+        // Register grid shortcuts when showing overlay again
+        this.registerGridShortcuts();
         
         // Small delay to ensure window is fully shown before focusing
         setTimeout(() => {
@@ -626,17 +639,17 @@ class ScreenGridApp {
       this.toggleOverlay();
     });
 
-    // Ctrl+Shift+1 for display 1, Ctrl+Shift+2 for display 2, etc.
-    globalShortcut.register('CommandOrControl+Shift+1', () => {
+    // Ctrl+Alt+Shift+1 for display 1, Ctrl+Alt+Shift+2 for display 2, etc.
+    globalShortcut.register('CommandOrControl+Alt+Shift+1', () => {
       this.switchToDisplay(0);
     });
     
-    globalShortcut.register('CommandOrControl+Shift+2', () => {
+    globalShortcut.register('CommandOrControl+Alt+Shift+2', () => {
       this.switchToDisplay(1);
     });
 
-    // Escape to hide overlay
-    globalShortcut.register('Escape', () => {
+    // Ctrl+Shift+X to hide overlay
+    globalShortcut.register('CommandOrControl+Shift+X', () => {
       if (this.isOverlayVisible) {
         if (this.overlayWindow) {
           this.overlayWindow.hide();
@@ -645,12 +658,18 @@ class ScreenGridApp {
         if (this.zoomWindow) {
           this.zoomWindow.hide();
         }
+        
+        // Unregister grid shortcuts when hiding
+        this.unregisterGridShortcuts();
       }
     });
 
-    // Register number keys for grid input when overlay or zoom window is visible
+  }
+
+  registerGridShortcuts() {
+    // Register Ctrl+Shift+number keys for grid input when overlay or zoom window is visible
     for (let i = 0; i <= 9; i++) {
-      globalShortcut.register(`${i}`, () => {
+      globalShortcut.register(`CommandOrControl+Shift+${i}`, () => {
         if (this.isOverlayVisible && this.overlayWindow) {
           this.overlayWindow.webContents.send('global-key-press', { key: i.toString() });
         } else if (this.zoomWindow && this.zoomWindow.isVisible()) {
@@ -659,8 +678,8 @@ class ScreenGridApp {
       });
     }
 
-    // Register Enter and Backspace for grid navigation
-    globalShortcut.register('Return', () => {
+    // Register Ctrl+Shift+Enter and Ctrl+Shift+Backspace for grid navigation
+    globalShortcut.register('CommandOrControl+Shift+Return', () => {
       if (this.isOverlayVisible && this.overlayWindow) {
         this.overlayWindow.webContents.send('global-key-press', { key: 'Enter' });
       } else if (this.zoomWindow && this.zoomWindow.isVisible()) {
@@ -668,13 +687,28 @@ class ScreenGridApp {
       }
     });
 
-    globalShortcut.register('BackSpace', () => {
+    globalShortcut.register('CommandOrControl+Shift+BackSpace', () => {
       if (this.isOverlayVisible && this.overlayWindow) {
         this.overlayWindow.webContents.send('global-key-press', { key: 'Backspace' });
       } else if (this.zoomWindow && this.zoomWindow.isVisible()) {
         this.zoomWindow.webContents.send('global-key-press', { key: 'Backspace' });
       }
     });
+    
+    console.log('📋 SHORTCUTS: Grid shortcuts registered (Ctrl+Shift+numbers, Ctrl+Shift+Enter, Ctrl+Shift+Backspace)');
+  }
+
+  unregisterGridShortcuts() {
+    // Unregister Ctrl+Shift+number keys
+    for (let i = 0; i <= 9; i++) {
+      globalShortcut.unregister(`CommandOrControl+Shift+${i}`);
+    }
+    
+    // Unregister Ctrl+Shift+Enter and Ctrl+Shift+Backspace
+    globalShortcut.unregister('CommandOrControl+Shift+Return');
+    globalShortcut.unregister('CommandOrControl+Shift+BackSpace');
+    
+    console.log('📋 SHORTCUTS: Grid shortcuts unregistered (Ctrl+Shift combinations)');
   }
 
   async switchToDisplay(displayIndex) {
