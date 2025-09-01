@@ -24,7 +24,8 @@ class ScreenGridApp {
       zoomGridSize: 30, // Size of each grid square in zoom window (pixels)
       zoomNumberLayout: 'corners', // Layout for zoom window numbers: 'center', 'all-corners', 'two-corners'
       zoomOpacity: 0.8, // Opacity for zoom window content elements (numbers, backgrounds)
-      zoomBorderOpacity: 0.6 // Separate opacity for zoom window borders
+      zoomBorderOpacity: 0.6, // Separate opacity for zoom window borders
+      zoomCornerNumberSize: 12 // Font size for two-corners layout numbers (pixels)
     };
     this.gridConfig = { ...this.defaultGridConfig };
   }

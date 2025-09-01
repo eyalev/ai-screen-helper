@@ -373,6 +373,17 @@
       </div>
     </div>
 
+    <div class="setting-item">
+      <div class="setting-label">
+        <div class="name">Two-Corners Number Size</div>
+        <div class="description">Font size for corner numbers in two-corners layout (pixels)</div>
+      </div>
+      <div class="setting-control">
+        <input type="range" id="zoomCornerNumberSize" min="8" max="24" step="1" value="12">
+        <span class="current-value" id="zoomCornerNumberSizeValue">12px</span>
+      </div>
+    </div>
+
     <div class="zoom-explanation">
       <div class="title">What is Zoom Padding?</div>
       <div>
@@ -416,6 +427,7 @@
       zoomOpacity: document.getElementById('zoomOpacity'),
       zoomBorderOpacity: document.getElementById('zoomBorderOpacity'),
       zoomNumberLayout: document.getElementById('zoomNumberLayout'),
+      zoomCornerNumberSize: document.getElementById('zoomCornerNumberSize'),
       
       rowsValue: document.getElementById('rowsValue'),
       colsValue: document.getElementById('colsValue'),
@@ -429,6 +441,7 @@
       zoomOpacityValue: document.getElementById('zoomOpacityValue'),
       zoomBorderOpacityValue: document.getElementById('zoomBorderOpacityValue'),
       zoomNumberLayoutValue: document.getElementById('zoomNumberLayoutValue'),
+      zoomCornerNumberSizeValue: document.getElementById('zoomCornerNumberSizeValue'),
       
       gridPreview: document.getElementById('gridPreview'),
       zoomPreview: document.getElementById('zoomPreview'),
@@ -452,6 +465,7 @@
       const zoomOpacity = parseFloat(elements.zoomOpacity.value);
       const zoomBorderOpacity = parseFloat(elements.zoomBorderOpacity.value);
       const zoomNumberLayout = elements.zoomNumberLayout.value;
+      const zoomCornerNumberSize = parseInt(elements.zoomCornerNumberSize.value);
       
       // Show example with prefix/suffix
       const exampleNumber = `${numberPrefix}1${numberSuffix}`;
@@ -476,6 +490,7 @@
       elements.zoomGridSizeValue.textContent = `${zoomGridSize}px`;
       elements.zoomOpacityValue.textContent = `${Math.round(zoomOpacity * 100)}%`;
       elements.zoomBorderOpacityValue.textContent = `${Math.round(zoomBorderOpacity * 100)}%`;
+      elements.zoomCornerNumberSizeValue.textContent = `${zoomCornerNumberSize}px`;
       const layoutLabels = {
         'center': 'Center Only (1)',
         'two-corners': 'Two Corners (2)',
@@ -498,6 +513,7 @@
       elements.zoomGridSize.value = settings.zoomGridSize || 30;
       elements.zoomOpacity.value = settings.zoomOpacity || 0.8;
       elements.zoomBorderOpacity.value = settings.zoomBorderOpacity || 0.6;
+      elements.zoomCornerNumberSize.value = settings.zoomCornerNumberSize || 12;
       
       // Handle backwards compatibility with old showZoomCornerNumbers setting
       let layoutValue = settings.zoomNumberLayout || 'all-corners';
@@ -522,7 +538,8 @@
         zoomGridSize: parseInt(elements.zoomGridSize.value),
         zoomOpacity: parseFloat(elements.zoomOpacity.value),
         zoomBorderOpacity: parseFloat(elements.zoomBorderOpacity.value),
-        zoomNumberLayout: elements.zoomNumberLayout.value
+        zoomNumberLayout: elements.zoomNumberLayout.value,
+        zoomCornerNumberSize: parseInt(elements.zoomCornerNumberSize.value)
       };
       
       ipcRenderer.send('save-settings', newSettings);
@@ -542,7 +559,7 @@
     }
 
     // Event listeners for real-time updates
-    ['rows', 'cols', 'gridOpacity', 'numberPrefix', 'numberSuffix', 'zoomFactor', 'zoomPadding', 'zoomGridSize', 'zoomOpacity', 'zoomBorderOpacity'].forEach(id => {
+    ['rows', 'cols', 'gridOpacity', 'numberPrefix', 'numberSuffix', 'zoomFactor', 'zoomPadding', 'zoomGridSize', 'zoomOpacity', 'zoomBorderOpacity', 'zoomCornerNumberSize'].forEach(id => {
       elements[id].addEventListener('input', updatePreviews);
     });
     
