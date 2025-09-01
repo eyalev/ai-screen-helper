@@ -17,6 +17,7 @@
       color: #00ffff;
       overflow: hidden;
       --zoom-opacity: 0.8;
+      --zoom-border-opacity: 0.6;
       margin: 0;
       padding: 0;
     }
@@ -90,7 +91,7 @@
 
     .grid-square {
       position: absolute;
-      border: 1px solid rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.75));
+      border: 1px solid rgba(255, 255, 0, var(--zoom-border-opacity));
       background: rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.1875));
       cursor: pointer;
       transition: all 0.2s ease;
@@ -100,8 +101,8 @@
 
     .grid-square:hover {
       background: rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.25));
-      border-color: rgba(255, 255, 0, var(--zoom-opacity));
-      box-shadow: 0 0 8px rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.5));
+      border-color: rgba(255, 255, 0, calc(var(--zoom-border-opacity) * 1.5));
+      box-shadow: 0 0 8px rgba(255, 255, 0, calc(var(--zoom-border-opacity) * 0.8));
       transform: scale(1.02);
     }
 
@@ -441,7 +442,7 @@
               background: rgba(0, 0, 0, calc(var(--zoom-opacity) * 0.6));
               padding: 1px 3px;
               border-radius: 2px;
-              border: 1px solid rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.5));
+              border: 1px solid rgba(255, 255, 0, var(--zoom-border-opacity));
             `;
             square.appendChild(numberSpan);
           }
@@ -468,7 +469,7 @@
                 background: rgba(0, 0, 0, calc(var(--zoom-opacity) * 0.7));
                 padding: 0px 2px;
                 border-radius: 2px;
-                border: 1px solid rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.3));
+                border: 1px solid rgba(255, 255, 0, var(--zoom-border-opacity));
                 pointer-events: none;
               `;
               square.appendChild(cornerSpan);
@@ -493,7 +494,7 @@
                 background: rgba(0, 0, 0, calc(var(--zoom-opacity) * 0.7));
                 padding: 0px 2px;
                 border-radius: 2px;
-                border: 1px solid rgba(255, 255, 0, calc(var(--zoom-opacity) * 0.3));
+                border: 1px solid rgba(255, 255, 0, var(--zoom-border-opacity));
                 pointer-events: none;
               `;
               square.appendChild(cornerSpan);
@@ -793,12 +794,23 @@
 
     // Handle zoom data from main process
     ipcRenderer.on('show-zoom', (event, data) => {
-      // Apply zoom opacity CSS variable if provided, using separate zoomOpacity setting
+      // Apply zoom opacity CSS variables if provided
       if (data.config && data.config.zoomOpacity !== undefined) {
         document.body.style.setProperty('--zoom-opacity', data.config.zoomOpacity);
       } else if (data.config && data.config.gridOpacity !== undefined) {
         // Fallback to gridOpacity for backwards compatibility
         document.body.style.setProperty('--zoom-opacity', data.config.gridOpacity);
+      }
+      
+      // Apply zoom border opacity CSS variable
+      if (data.config && data.config.zoomBorderOpacity !== undefined) {
+        document.body.style.setProperty('--zoom-border-opacity', data.config.zoomBorderOpacity);
+      } else if (data.config && data.config.zoomOpacity !== undefined) {
+        // Fallback to zoomOpacity * 0.75 for backwards compatibility
+        document.body.style.setProperty('--zoom-border-opacity', data.config.zoomOpacity * 0.75);
+      } else if (data.config && data.config.gridOpacity !== undefined) {
+        // Fallback to gridOpacity * 0.75 for backwards compatibility
+        document.body.style.setProperty('--zoom-border-opacity', data.config.gridOpacity * 0.75);
       }
       
       setupZoomView(data);
