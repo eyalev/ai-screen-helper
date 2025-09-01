@@ -83,3 +83,4 @@ xdotool click 1
 ## Distribution
 
 The project builds both AppImage and .deb packages targeting Ubuntu 22.04/24.04 with GitHub Actions automation for releases.
+- When creating a new release, it should have a .deb file and an Appimage
