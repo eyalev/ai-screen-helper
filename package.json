@@ -1,6 +1,6 @@
 {
   "name": "ai-screen-helper",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "Screen grid overlay tool for AI agents to help with precise mouse targeting",
   "main": "src/main/main.js",
   "scripts": {
